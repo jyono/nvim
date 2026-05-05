@@ -5,7 +5,7 @@
   Purpose
     Lazy spec for nvim-lspconfig + Mason + blink.cmp integration: LspAttach
     keymaps, server table (clangd, gopls, pyright, rust, ts_ls, lua_ls, etc.),
-    Mason tool installer, and 0.11 `vim.lsp.config` / `vim.lsp.enable` wiring.
+    Mason tool installer, and `vim.lsp.config` / `vim.lsp.enable` (Neovim 0.12+).
 
   Rationale
     Concentrates all LSP lifecycle logic in one place. Blink is both a
@@ -71,7 +71,7 @@ return {
         -- Defer requiring Telescope until keypress: on `nvim file.py`, LspAttach can run
         -- before VimEnter, when lazy.nvim has not loaded telescope.nvim yet.
         --
-        -- Nvim 0.11+ sets *global* defaults grr/gri/grt/gO → vim.lsp.buf.* (quickfix / loclist).
+        -- Nvim 0.11+ (incl. 0.12) sets *global* defaults grr/gri/grt/gO → vim.lsp.buf.* (quickfix / loclist).
         -- Buffer-local maps override defaults; grr/gri/grd/gO/gW/grt use Telescope pickers.
         -- `grd` is not a core default mapping; it maps goto-definition through Telescope here.
         map('grr', function() require('telescope.builtin').lsp_references() end, '[R]eferences')
@@ -83,13 +83,8 @@ return {
         -- put the cursor on a named identifier, or use grd on the symbol name — same LSP limit.
         map('grt', function() require('telescope.builtin').lsp_type_definitions() end, '[G]oto [T]ype Definition')
 
-        -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
         local function client_supports_method(client, method, bufnr)
-          if vim.fn.has 'nvim-0.11' == 1 then
-            return client:supports_method(method, bufnr)
-          else
-            return client.supports_method(method, { bufnr = bufnr })
-          end
+          return client:supports_method(method, bufnr)
         end
 
         local client = vim.lsp.get_client_by_id(event.data.client_id)
@@ -374,22 +369,16 @@ return {
       -- from silently skipping unmanaged/globally-installed binaries.
     }
 
-    -- Ensure lspconfig is loaded so defaults are populated in Nvim 0.11
+    -- Ensure lspconfig is loaded so bundled server defaults exist (`:help lspconfig-all`).
     require 'lspconfig'
 
-    -- Explicitly set up all servers defined in the servers table.
+    -- Explicitly set up all servers defined in the servers table (native `vim.lsp.config` API).
     for server_name, server in pairs(servers) do
       server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
 
-      if vim.fn.has 'nvim-0.11' == 1 then
-        -- Neovim 0.11+ native config API (prevents deprecation warning)
-        local def = vim.lsp.config[server_name] or {}
-        vim.lsp.config[server_name] = vim.tbl_deep_extend('force', def, server)
-        vim.lsp.enable(server_name)
-      else
-        -- Neovim 0.10 and earlier legacy API
-        require('lspconfig')[server_name].setup(server)
-      end
+      local def = vim.lsp.config[server_name] or {}
+      vim.lsp.config[server_name] = vim.tbl_deep_extend('force', def, server)
+      vim.lsp.enable(server_name)
     end
   end,
 },

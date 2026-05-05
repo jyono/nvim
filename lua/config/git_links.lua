@@ -9,7 +9,7 @@
   Rationale
     Used by `config.keymaps` (`<leader>go`).
 
-  Dependencies: git(1); `vim.ui.open` on Nvim 0.10+, else `open` / `xdg-open` / `cmd start`.
+  Dependencies: git(1); `vim.ui.open` when available, else `open` / `xdg-open` / `cmd start`.
 ]]
 
 local M = {}
