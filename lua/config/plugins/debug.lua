@@ -3,15 +3,13 @@
   Module: config.plugins.debug
 
   Purpose
-    Lazy spec for nvim-dap + nvim-dap-ui + mason-nvim-dap + nvim-dap-go: Delve
-    adapter, IDE-style UI layout, Mason `dlv`, and Go debug keymaps (incl.
-    treesitter “nearest test”).
+    nvim-dap + dap-ui + mason-nvim-dap (install `dlv`) + nvim-dap-go with **default
+    Delve behavior**, plus your `<leader>d` maps.
 
   Rationale
-    Go debugging breaks most often from (1) a different `dlv` on PATH than Mason,
-    (2) build tags / gcflags not matching what `go build` expects, (3) wrong cwd
-    vs `go.mod`, or (4) DAP UI closing before you read the REPL. Delve is started
-    for you — **no external `dlv` or attach** unless you pick an “Attach” config.
+    Custom Delve flags, Mason-specific paths, and extra attach configs were easy
+    sources of flaky sessions. gopls tags stay in `config.go`; debugging uses
+    nvim-dap-go’s stock `dlv` integration.
 
   See `:help dap.txt`, https://github.com/leoluz/nvim-dap-go
 ]]
@@ -71,40 +69,24 @@ return {
           vim.notify('DAP: not a Go buffer', vim.log.levels.WARN)
           return
         end
-        local dap = require 'dap'
-        local go_dev = require 'config.go'
-        local function mod_root()
-          local dir = vim.fn.expand '%:p:h'
-          for _ = 1, 64 do
-            if vim.uv.fs_stat(dir .. '/go.mod') then
-              return dir
-            end
-            local parent = vim.fn.fnamemodify(dir, ':h')
-            if parent == dir then
-              break
-            end
-            dir = parent
-          end
-          return vim.fn.getcwd()
-        end
-        dap.run {
-          type = 'go',
-          name = 'Debug this file',
-          request = 'launch',
-          program = vim.fn.expand '%:p',
-          cwd = mod_root(),
-          buildFlags = go_dev.delve_build_flags,
-          outputMode = 'remote',
-        }
+        require('dap').run(
+          {
+            type = 'go',
+            name = 'Debug this file',
+            request = 'launch',
+            program = vim.fn.expand '%:p',
+            cwd = require('config.go').mod_root(),
+          },
+          { new = true }
+        )
       end,
       ft = 'go',
-      desc = 'DAP: Go — launch this file (no menu)',
+      desc = 'DAP: Go — debug this file',
     },
   },
   config = function()
     local dap = require 'dap'
     local dapui = require 'dapui'
-    local go_dev = require 'config.go'
 
     require('mason-nvim-dap').setup {
       automatic_installation = false,
@@ -165,33 +147,10 @@ return {
     dap.listeners.after.event_initialized['dapui_config'] = function()
       dapui.open { reset = true }
     end
-    -- Keep REPL / console visible after the debuggee stops so failures are readable.
     dap.listeners.before.event_exited['dapui_config'] = function()
       dapui.close()
     end
 
-    require('dap-go').setup {
-      delve = {
-        path = go_dev.delve_executable(),
-        build_flags = go_dev.delve_build_flags,
-        initialize_timeout_sec = 40,
-        detached = vim.fn.has 'win32' == 0,
-        output_mode = 'remote',
-      },
-      tests = { verbose = false },
-      dap_configurations = {
-        {
-          type = 'go',
-          name = 'Attach remote (localhost:2345)',
-          mode = 'remote',
-          request = 'attach',
-          port = 2345,
-          host = '127.0.0.1',
-          substitutePath = {
-            { from = '${workspaceFolder}', to = vim.fn.getcwd() },
-          },
-        },
-      },
-    }
+    require('dap-go').setup()
   end,
 }

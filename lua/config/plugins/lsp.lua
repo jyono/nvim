@@ -25,13 +25,19 @@ return {
     { 'saghen/blink.cmp', version = '1.*' },
     -- Automatically install LSPs and related tools to stdpath for Neovim
     -- Mason must be loaded before its dependents so we need to set it up here.
-    -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
     {
       'mason-org/mason.nvim',
       ---@module 'mason.settings'
       ---@type MasonSettings
-      ---@diagnostic disable-next-line: missing-fields
-      opts = {},
+      opts = {
+        pip = {
+          -- PyPI packages (e.g. ruff) inherit the host pip environment. A
+          -- corporate `PIP_INDEX_URL` / pip.conf (e.g. AWS CodeArtifact with
+          -- expired creds) breaks installs with 401 or "No matching distribution".
+          -- `--isolated` ignores those; `-i` forces the public index for Mason only.
+          install_args = { '--isolated', '-i', 'https://pypi.org/simple' },
+        },
+      },
     },
     -- Maps LSP server names between nvim-lspconfig and Mason package names.
     'mason-org/mason-lspconfig.nvim',
@@ -286,17 +292,10 @@ return {
       ts_ls = {
         settings = {},
         on_attach = function(client, bufnr)
+          -- Prefer Prettier via conform.nvim (`<leader>f`); keep LSP out of formatting.
           client.server_capabilities.documentFormattingProvider = false
           client.server_capabilities.documentRangeFormattingProvider = false
-
-          -- Disable format on save for this buffer
-          vim.api.nvim_set_option_value('formatoptions', '', { buf = bufnr })
-          vim.api.nvim_create_autocmd('BufWritePre', {
-            buffer = bufnr,
-            callback = function()
-              -- Do nothing, preventing format on save
-            end,
-          })
+          vim.b[bufnr].disable_autoformat = true
         end,
       },
 
@@ -349,6 +348,7 @@ return {
       'stylua', -- Used to format Lua code
       'sql-formatter',
       'prettier',
+      'ruff',
       'markdownlint', -- CLI for nvim-lint markdown (see `config.plugins.lint`)
       'staticcheck',
       'goimports',
