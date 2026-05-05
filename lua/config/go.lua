@@ -19,10 +19,10 @@ M.tags = 'functional,integration,small,medium,large'
 --- gopls `settings.gopls.buildFlags` shape (list of argv tokens).
 M.gopls_build_flags = { '-tags', M.tags }
 
---- nvim-dap-go `delve.build_flags`: tags + **unoptimized** build so Delve is not
---- stuck in “(warning: optimized function)” and stack/locals match source.
---- (`-N` disable optimizations, `-l` disable inlining — debug only, not for gopls.)
-M.delve_build_flags = '-tags=' .. M.tags .. ' -gcflags=all=-N -l'
+--- nvim-dap-go `delve.build_flags`: tags + **unoptimized** build for Delve.
+--- Use two `-gcflags=` flags: a single `all=-N -l` string is parsed wrong (`-l`
+--- becomes a stray `go build` flag and optimizations never turn off).
+M.delve_build_flags = '-tags=' .. M.tags .. ' -gcflags=all=-N -gcflags=all=-l'
 
 --- Prefer Mason’s `dlv` when present so PATH does not shadow an older binary.
 function M.delve_executable()
