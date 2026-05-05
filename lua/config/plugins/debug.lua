@@ -9,8 +9,9 @@
 
   Rationale
     Go debugging breaks most often from (1) a different `dlv` on PATH than Mason,
-    (2) build tags not matching gopls, or (3) DAP UI closing before you read the
-    REPL. This file centralizes fixes for those cases.
+    (2) build tags / gcflags not matching what `go build` expects, (3) wrong cwd
+    vs `go.mod`, or (4) DAP UI closing before you read the REPL. Delve is started
+    for you — **no external `dlv` or attach** unless you pick an “Attach” config.
 
   See `:help dap.txt`, https://github.com/leoluz/nvim-dap-go
 ]]
@@ -27,7 +28,11 @@ return {
     'leoluz/nvim-dap-go',
   },
   keys = {
-    { '<leader>dc', function() require('dap').continue() end, desc = 'DAP: Continue' },
+    {
+      '<leader>dc',
+      function() require('dap').continue() end,
+      desc = 'DAP: Continue / start (choose configuration)',
+    },
     { '<leader>dC', function() require('dap').run_last() end, desc = 'DAP: Run last' },
     { '<leader>di', function() require('dap').step_into() end, desc = 'DAP: Step into' },
     { '<leader>dn', function() require('dap').step_over() end, desc = 'DAP: Step over (next)' },
@@ -58,6 +63,42 @@ return {
       function() require('dap-go').debug_last_test() end,
       ft = 'go',
       desc = 'DAP: Debug last Go test',
+    },
+    {
+      '<leader>dF',
+      function()
+        if vim.bo.filetype ~= 'go' then
+          vim.notify('DAP: not a Go buffer', vim.log.levels.WARN)
+          return
+        end
+        local dap = require 'dap'
+        local go_dev = require 'config.go'
+        local function mod_root()
+          local dir = vim.fn.expand '%:p:h'
+          for _ = 1, 64 do
+            if vim.uv.fs_stat(dir .. '/go.mod') then
+              return dir
+            end
+            local parent = vim.fn.fnamemodify(dir, ':h')
+            if parent == dir then
+              break
+            end
+            dir = parent
+          end
+          return vim.fn.getcwd()
+        end
+        dap.run {
+          type = 'go',
+          name = 'Debug this file',
+          request = 'launch',
+          program = vim.fn.expand '%:p',
+          cwd = mod_root(),
+          buildFlags = go_dev.delve_build_flags,
+          outputMode = 'remote',
+        }
+      end,
+      ft = 'go',
+      desc = 'DAP: Go — launch this file (no menu)',
     },
   },
   config = function()
