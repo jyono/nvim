@@ -17,6 +17,8 @@
 return {
 { -- Highlight, edit, and navigate code
   'nvim-treesitter/nvim-treesitter',
+  -- Stay on `master`: nvim-treesitter `main` is a full rewrite (no nvim-treesitter.configs).
+  branch = 'master',
   lazy = false,
   build = ':TSUpdate',
   main = 'nvim-treesitter.configs', -- Sets main module to use for opts
@@ -40,7 +42,6 @@ return {
       'gosum',
       'rust',
       'python',
-      -- neotest-jest / TS test discovery (see neotest.lua)
       'javascript',
       'typescript',
       'tsx',

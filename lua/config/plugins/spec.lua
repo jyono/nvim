@@ -45,7 +45,6 @@ local mods = {
   'config.plugins.toggleterm',
   'config.plugins.mini_icons',
   'config.plugins.debug',
-  'config.plugins.neotest',
   'config.plugins.indent_line',
   'config.plugins.lint',
   'config.plugins.autopairs',
