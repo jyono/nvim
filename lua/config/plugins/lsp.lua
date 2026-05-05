@@ -41,6 +41,8 @@ return {
     { 'j-hui/fidget.nvim', opts = {} },
   },
   config = function()
+    local go_dev = require 'config.go'
+
     -- LspAttach: buffer-local LSP maps and optional semantic highlight / inlay hints.
     -- See :help LspAttach, :help lsp-vs-treesitter
     vim.api.nvim_create_autocmd('LspAttach', {
@@ -158,10 +160,7 @@ return {
       gopls = {
         settings = {
           gopls = {
-            buildFlags = {
-              '-tags',
-              'functional,integration,small,medium,large',
-            },
+            buildFlags = go_dev.gopls_build_flags,
 
             -- Completion settings
             completeUnimported = true,

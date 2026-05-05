@@ -28,6 +28,7 @@ return {
 
     -- Document existing key chains
     spec = {
+      { '<leader>d', group = 'DAP / [D]ebug', mode = { 'n' } },
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
