@@ -40,6 +40,10 @@ return {
       'gosum',
       'rust',
       'python',
+      -- neotest-jest / TS test discovery (see neotest.lua)
+      'javascript',
+      'typescript',
+      'tsx',
       'json',
       'toml',
       'css',
