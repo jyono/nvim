@@ -29,6 +29,7 @@ return {
   {
     'nvim-neotest/neotest',
     dependencies = {
+      'nvim-treesitter/nvim-treesitter',
       'nvim-neotest/nvim-nio',
       'nvim-lua/plenary.nvim',
       'fredrikaverpil/neotest-golang',
