@@ -3,8 +3,8 @@
   Module: config.plugins.snacks
 
   Purpose
-    folke/snacks.nvim: picker (Telescope replacement), bigfile, quickfile,
-    input, gitbrowse, and words (LSP reference highlights +  / [[ jumps).
+    folke/snacks.nvim: picker, explorer (replaces neo-tree), bigfile, quickfile,
+    input, gitbrowse, lazygit, and words.
 
   Rationale
     `priority` + `lazy = false` so quickfile can run before VimEnter on
@@ -24,8 +24,18 @@ return {
   },
   ---@type snacks.Config
   opts = {
+    explorer = {
+      replace_netrw = true,
+    },
     picker = {
       ui_select = true,
+      sources = {
+        explorer = {
+          watch = true,
+          git_status = true,
+          git_untracked = true,
+        },
+      },
     },
     bigfile = {},
     quickfile = {},
@@ -38,6 +48,17 @@ return {
   },
   config = function()
     local picker = Snacks.picker
+
+    local function explorer_toggle()
+      local current = Snacks.picker.current
+      if current and current.opts.source == 'explorer' then
+        current:close()
+        return
+      end
+      Snacks.explorer()
+    end
+
+    vim.keymap.set('n', '<leader>x', explorer_toggle, { desc = 'Explorer toggle' })
 
     vim.keymap.set('n', '<leader>sh', picker.help, { desc = '[S]earch [H]elp' })
     vim.keymap.set('n', '<leader>sk', picker.keymaps, { desc = '[S]earch [K]eymaps' })
