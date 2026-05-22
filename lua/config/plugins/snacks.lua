@@ -112,6 +112,13 @@ return {
     vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git [G]UI (LazyGit)' })
     vim.keymap.set('n', '<leader>gs', picker.git_status, { desc = 'Git [s]tatus (changed files)' })
     vim.keymap.set('n', '<leader>gd', picker.git_diff, { desc = 'Git [d]iff (hunks)' })
+    vim.keymap.set('n', '<leader>gM', function()
+      picker.git_diff {
+        base = '@{upstream}',
+        group = true,
+        title = 'Changes vs upstream',
+      }
+    end, { desc = 'Git diff vs [M]ain/upstream' })
     vim.keymap.set('n', '<leader>gl', picker.git_log, { desc = 'Git [l]og' })
     vim.keymap.set('n', '<leader>gf', picker.git_log_file, { desc = 'Git log current [f]ile' })
     vim.keymap.set('n', '<leader>gL', picker.git_log_line, { desc = 'Git log current [L]ine' })
