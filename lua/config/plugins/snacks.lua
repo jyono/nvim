@@ -33,6 +33,7 @@ return {
     gitbrowse = {
       what = 'file',
     },
+    lazygit = {},
     words = {},
   },
   config = function()
@@ -86,7 +87,14 @@ return {
       }
     end, { desc = '[S]earch [A]ll [F]iles' })
 
-    vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Open in browser (git)' })
+    -- Git: view changes / diffs (stage in CLI or LazyGit)
+    vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git [G]UI (LazyGit)' })
+    vim.keymap.set('n', '<leader>gs', picker.git_status, { desc = 'Git [s]tatus (changed files)' })
+    vim.keymap.set('n', '<leader>gd', picker.git_diff, { desc = 'Git [d]iff (hunks)' })
+    vim.keymap.set('n', '<leader>gl', picker.git_log, { desc = 'Git [l]og' })
+    vim.keymap.set('n', '<leader>gf', picker.git_log_file, { desc = 'Git log current [f]ile' })
+    vim.keymap.set('n', '<leader>gL', picker.git_log_line, { desc = 'Git log current [L]ine' })
+    vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Git [o]pen in browser' })
 
     vim.keymap.set({ 'n', 't' }, ']]', function() Snacks.words.jump(vim.v.count1) end, { desc = 'Next LSP reference' })
     vim.keymap.set({ 'n', 't' }, '[[', function() Snacks.words.jump(-vim.v.count1) end, { desc = 'Prev LSP reference' })
