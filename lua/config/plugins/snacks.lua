@@ -29,13 +29,6 @@ return {
     },
     picker = {
       ui_select = true,
-      sources = {
-        explorer = {
-          watch = true,
-          git_status = true,
-          git_untracked = true,
-        },
-      },
     },
     bigfile = {},
     quickfile = {},
