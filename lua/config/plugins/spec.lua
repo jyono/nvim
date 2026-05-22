@@ -33,7 +33,7 @@ local mods = {
   'config.plugins.gitsigns',
   'config.plugins.which_key',
   'config.plugins.render_markdown',
-  'config.plugins.telescope',
+  'config.plugins.snacks',
   'config.plugins.lsp',
   'config.plugins.conform',
   'config.plugins.blink',

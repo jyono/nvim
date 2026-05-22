@@ -8,7 +8,7 @@
 
   Rationale
     Loaded on `VimEnter` so it does not delay first screen paint. `spec` entries
-    document chains used elsewhere (Telescope, gitsigns, LSP maps).
+    document chains used elsewhere (Snacks picker, gitsigns, LSP maps).
 
   See `:help which-key.nvim.txt`.
 ]]
