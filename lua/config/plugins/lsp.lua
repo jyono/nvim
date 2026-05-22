@@ -76,20 +76,20 @@ return {
         --  For example, in C this would take you to the header.
         map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
-        -- Defer requiring Telescope until keypress: on `nvim file.py`, LspAttach can run
-        -- before VimEnter, when lazy.nvim has not loaded telescope.nvim yet.
+        -- Defer Snacks picker until keypress: on `nvim file.py`, LspAttach can run before VimEnter,
+        -- when lazy.nvim has not loaded snacks.nvim yet.
         --
         -- Nvim 0.11+ (incl. 0.12) sets *global* defaults grr/gri/grt/gO → vim.lsp.buf.* (quickfix / loclist).
-        -- Buffer-local maps override defaults; grr/gri/grd/gO/gW/grt use Telescope pickers.
-        -- `grd` is not a core default mapping; it maps goto-definition through Telescope here.
-        map('grr', function() require('telescope.builtin').lsp_references() end, '[R]eferences')
-        map('gri', function() require('telescope.builtin').lsp_implementations() end, '[I]mplementation')
-        map('grd', function() require('telescope.builtin').lsp_definitions() end, '[G]oto [D]efinition')
-        map('gO', function() require('telescope.builtin').lsp_document_symbols() end, 'Open Document Symbols')
-        map('gW', function() require('telescope.builtin').lsp_dynamic_workspace_symbols() end, 'Open Workspace Symbols')
+        -- Buffer-local maps override defaults; grr/gri/grd/gO/gW/grt use Snacks pickers.
+        -- `grd` is not a core default mapping; it maps goto-definition through the picker here.
+        map('grr', function() Snacks.picker.lsp_references() end, '[R]eferences')
+        map('gri', function() Snacks.picker.lsp_implementations() end, '[I]mplementation')
+        map('grd', function() Snacks.picker.lsp_definitions() end, '[G]oto [D]efinition')
+        map('gO', function() Snacks.picker.lsp_symbols() end, 'Open Document Symbols')
+        map('gW', function() Snacks.picker.lsp_workspace_symbols() end, 'Open Workspace Symbols')
         -- gopls may error on anonymous func types ("cannot find type name from type func(...)"):
         -- put the cursor on a named identifier, or use grd on the symbol name — same LSP limit.
-        map('grt', function() require('telescope.builtin').lsp_type_definitions() end, '[G]oto [T]ype Definition')
+        map('grt', function() Snacks.picker.lsp_type_definitions() end, '[G]oto [T]ype Definition')
 
         local function client_supports_method(client, method, bufnr)
           return client:supports_method(method, bufnr)
