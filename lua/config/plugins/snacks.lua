@@ -3,21 +3,22 @@
   Module: config.plugins.snacks
 
   Purpose
-    Lazy spec for folke/snacks.nvim: fuzzy finder (picker) for files, grep,
-    diagnostics, help, and LSP; replaces telescope.nvim.
+    folke/snacks.nvim: picker (Telescope replacement), bigfile, quickfile,
+    input, gitbrowse, and words (LSP reference highlights +  / [[ jumps).
 
   Rationale
-    Keymaps mirror the former Telescope `<leader>s*` layout. LSP maps in
-    `lsp.lua` defer `Snacks.picker.*` until keypress for the same VimEnter reason.
+    `priority` + `lazy = false` so quickfile can run before VimEnter on
+    `nvim file`. LSP maps in `lsp.lua` still use Snacks.picker on keypress.
 
-  See snacks picker docs: https://github.com/folke/snacks.nvim/blob/main/docs/picker.md
+  See https://github.com/folke/snacks.nvim
 ]]
 
 ---@type LazySpec
 return {
 {
   'folke/snacks.nvim',
-  event = 'VimEnter',
+  priority = 1000,
+  lazy = false,
   dependencies = {
     { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
   },
@@ -26,6 +27,13 @@ return {
     picker = {
       ui_select = true,
     },
+    bigfile = {},
+    quickfile = {},
+    input = {},
+    gitbrowse = {
+      what = 'file',
+    },
+    words = {},
   },
   config = function()
     local picker = Snacks.picker
@@ -77,6 +85,11 @@ return {
         exclude = { '.git/' },
       }
     end, { desc = '[S]earch [A]ll [F]iles' })
+
+    vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Open in browser (git)' })
+
+    vim.keymap.set({ 'n', 't' }, ']]', function() Snacks.words.jump(vim.v.count1) end, { desc = 'Next LSP reference' })
+    vim.keymap.set({ 'n', 't' }, '[[', function() Snacks.words.jump(-vim.v.count1) end, { desc = 'Prev LSP reference' })
   end,
 },
 }

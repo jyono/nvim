@@ -34,7 +34,7 @@ return {
       local function map(mode, l, r, opts)
         opts = opts or {}
         opts.buffer = bufnr
-        vim.keymap.set(mode, l, r, opts)
+        vim.thing.set(mode, l, r, opts)
       end
 
       -- Detect branch once per buffer attach
