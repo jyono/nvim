@@ -46,7 +46,9 @@ return {
     lazygit = {},
     words = {},
   },
-  config = function()
+  config = function(_, opts)
+    Snacks.setup(opts)
+
     local picker = Snacks.picker
 
     local function git_root()
