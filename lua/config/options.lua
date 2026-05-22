@@ -21,6 +21,12 @@ vim.g.loaded_perl_provider = 0
 vim.g.loaded_python3_provider = 0
 vim.g.loaded_ruby_provider = 0
 
+-- Let snacks.explorer handle directories (see snacks `replace_netrw`).
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+vim.g.loaded_netrwSettings = 1
+vim.g.loaded_netrwFileHandlers = 1
+
 vim.o.mouse = 'a'
 
 vim.o.showmode = false
