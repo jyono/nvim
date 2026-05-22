@@ -48,7 +48,6 @@ local mods = {
   'config.plugins.indent_line',
   'config.plugins.lint',
   'config.plugins.autopairs',
-  'config.plugins.neo-tree',
   'config.plugins.kulala',
 }
 

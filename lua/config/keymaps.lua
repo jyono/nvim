@@ -4,12 +4,12 @@
 
   Purpose
     Non-plugin (or minimally coupled) normal-mode maps: terminal escape,
-    window navigation, Neo-tree toggles, and visual paste without clobbering a register.
+    window navigation and visual paste without clobbering a register.
 
   Rationale
     Keeping these maps here avoids scattering `vim.keymap.set` across plugin
     config files and ensures they exist even before lazy.nvim finishes loading.
-    `<leader>go` (git browse) lives in `config.plugins.snacks`.
+    Explorer and `<leader>go` live in `config.plugins.snacks`.
 
   See `:help vim.keymap.set()`.
 ]]
@@ -30,5 +30,3 @@ vim.keymap.set('n', '<leader>tf', ':ToggleTerm<CR>', { desc = 'Toggle floating t
 
 vim.keymap.set('x', 'p', '"_dP', { noremap = true, silent = true })
 
-vim.keymap.set('n', '<leader>x', '<cmd>Neotree toggle<cr>', { desc = 'NeoTree Toggle' })
-vim.keymap.set('n', '<leader>z', '<cmd>Neotree reveal<cr>', { desc = 'NeoTree Reveal' })
