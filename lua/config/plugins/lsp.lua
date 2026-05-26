@@ -299,8 +299,6 @@ return {
         end,
       },
 
-      stylua = {}, -- Used to format Lua code
-
       -- Special Lua Config, as recommended by neovim help docs
       lua_ls = {
         on_init = function(client)
@@ -362,10 +360,9 @@ return {
     require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
     require('mason-lspconfig').setup {
-      ensure_installed = {}, -- empty: LSP servers are enabled only from the explicit `servers` table above
+      ensure_installed = {}, -- LSP servers come from the `servers` table + manual `vim.lsp.enable` below
       automatic_installation = false,
-      -- We are removing the handlers block here to prevent Mason
-      -- from silently skipping unmanaged/globally-installed binaries.
+      automatic_enable = false, -- default true; would double-call `vim.lsp.enable()` with our loop
     }
 
     -- Ensure lspconfig is loaded so bundled server defaults exist (`:help lspconfig-all`).
