@@ -9,25 +9,17 @@
   Rationale
     A single module avoids conflicting `vim.diagnostic.config` calls (e.g. one
     at startup and another inside LSP setup) overwriting each other.
-
-  Levels (`vim.g.diagnostics_level`, cycle with <leader>td or :DiagnosticsLevel):
-    all    — HINT and up (default display)
-    errors — ERROR only (hides markdownlint WARN and most LSP warnings)
-    off    — no signs, underline, or virtual text
+    `<leader>td` / `:DiagnosticsLevel` cycle display without disabling linters:
+    all (HINT+), errors (ERROR only), off.
 
   See `:help vim.diagnostic.config()`, `:help diagnostic-severity`.
 ]]
 
-local M = {}
+local levels = { 'all', 'errors', 'off' }
+local idx = { all = 1, errors = 2, off = 3 }
+local min_sev = { all = vim.diagnostic.severity.HINT, errors = vim.diagnostic.severity.ERROR }
 
-M.levels = { 'all', 'errors', 'off' }
-
-local severity_min = {
-  all = vim.diagnostic.severity.HINT,
-  errors = vim.diagnostic.severity.ERROR,
-}
-
-local function base_config()
+local function ui()
   return {
     severity_sort = true,
     float = { border = 'rounded', source = 'if_many' },
@@ -40,78 +32,33 @@ local function base_config()
         [vim.diagnostic.severity.HINT] = '󰌶 ',
       },
     } or {},
-    virtual_text = {
-      source = 'if_many',
-      spacing = 2,
-      format = function(diagnostic)
-        local diagnostic_message = {
-          [vim.diagnostic.severity.ERROR] = diagnostic.message,
-          [vim.diagnostic.severity.WARN] = diagnostic.message,
-          [vim.diagnostic.severity.INFO] = diagnostic.message,
-          [vim.diagnostic.severity.HINT] = diagnostic.message,
-        }
-        return diagnostic_message[diagnostic.severity]
-      end,
-    },
+    virtual_text = { source = 'if_many', spacing = 2 },
   }
 end
 
-function M.get_level()
-  return vim.g.diagnostics_level or 'all'
-end
-
----@param level 'all'|'errors'|'off'
----@param opts? { silent?: boolean }
-function M.apply(level, opts)
-  opts = opts or {}
+local function apply(level, quiet)
   vim.g.diagnostics_level = level
-
   if level == 'off' then
     vim.diagnostic.enable(false)
-    if not opts.silent then vim.notify('Diagnostics: off', vim.log.levels.INFO) end
-    return
+  else
+    vim.diagnostic.enable(true)
+    vim.diagnostic.config(vim.tbl_extend('force', ui(), { severity = { min = min_sev[level] } }))
   end
-
-  vim.diagnostic.enable(true)
-  vim.diagnostic.config(vim.tbl_extend('force', base_config(), {
-    severity = { min = severity_min[level] },
-  }))
-  if not opts.silent then vim.notify(('Diagnostics: %s'):format(level), vim.log.levels.INFO) end
+  if not quiet then vim.notify('Diagnostics: ' .. level, vim.log.levels.INFO) end
 end
 
-function M.cycle()
-  local current = M.get_level()
-  local next_idx = 1
-  for i, name in ipairs(M.levels) do
-    if name == current then
-      next_idx = (i % #M.levels) + 1
-      break
-    end
-  end
-  M.apply(M.levels[next_idx])
+local function cycle()
+  apply(levels[(idx[vim.g.diagnostics_level or 'all'] or 0) % #levels + 1])
 end
 
-M.apply(M.get_level(), { silent = true })
+apply(vim.g.diagnostics_level or 'all', true)
 
-vim.api.nvim_create_user_command('DiagnosticsLevel', function(opts)
-  local arg = opts.args
-  if arg == '' then
-    M.cycle()
-    return
+vim.api.nvim_create_user_command('DiagnosticsLevel', function(o)
+  if o.args == '' then
+    cycle()
+  elseif vim.tbl_contains(levels, o.args) then
+    apply(o.args)
   end
-  if not vim.tbl_contains(M.levels, arg) then
-    vim.notify(('Unknown level %q (use all, errors, or off)'):format(arg), vim.log.levels.ERROR)
-    return
-  end
-  M.apply(arg)
-end, {
-  nargs = '?',
-  complete = function()
-    return M.levels
-  end,
-  desc = 'Set or cycle diagnostic display level (all | errors | off)',
-})
+end, { nargs = '?', complete = function() return levels end })
 
-vim.keymap.set('n', '<leader>td', M.cycle, { desc = 'Cycle diagnostic level (all / errors / off)' })
-
-return M
+vim.keymap.set('n', '<leader>td', cycle, { desc = 'Cycle diagnostic level (all / errors / off)' })
