@@ -9,33 +9,56 @@
   Rationale
     A single module avoids conflicting `vim.diagnostic.config` calls (e.g. one
     at startup and another inside LSP setup) overwriting each other.
+    `<leader>td` / `:DiagnosticsLevel` cycle display without disabling linters:
+    all (HINT+), errors (ERROR only), off.
 
-  See `:help vim.diagnostic.config()`, `:help diagnostic-signs`.
+  See `:help vim.diagnostic.config()`, `:help diagnostic-severity`.
 ]]
 
-vim.diagnostic.config {
-  severity_sort = true,
-  float = { border = 'rounded', source = 'if_many' },
-  underline = true,
-  signs = vim.g.have_nerd_font and {
-    text = {
-      [vim.diagnostic.severity.ERROR] = '󰅚 ',
-      [vim.diagnostic.severity.WARN] = '󰀪 ',
-      [vim.diagnostic.severity.INFO] = '󰋽 ',
-      [vim.diagnostic.severity.HINT] = '󰌶 ',
-    },
-  } or {},
-  virtual_text = {
-    source = 'if_many',
-    spacing = 2,
-    format = function(diagnostic)
-      local diagnostic_message = {
-        [vim.diagnostic.severity.ERROR] = diagnostic.message,
-        [vim.diagnostic.severity.WARN] = diagnostic.message,
-        [vim.diagnostic.severity.INFO] = diagnostic.message,
-        [vim.diagnostic.severity.HINT] = diagnostic.message,
-      }
-      return diagnostic_message[diagnostic.severity]
-    end,
-  },
-}
+local levels = { 'all', 'errors', 'off' }
+local idx = { all = 1, errors = 2, off = 3 }
+local min_sev = { all = vim.diagnostic.severity.HINT, errors = vim.diagnostic.severity.ERROR }
+
+local function ui()
+  return {
+    severity_sort = true,
+    float = { border = 'rounded', source = 'if_many' },
+    underline = true,
+    signs = vim.g.have_nerd_font and {
+      text = {
+        [vim.diagnostic.severity.ERROR] = '󰅚 ',
+        [vim.diagnostic.severity.WARN] = '󰀪 ',
+        [vim.diagnostic.severity.INFO] = '󰋽 ',
+        [vim.diagnostic.severity.HINT] = '󰌶 ',
+      },
+    } or {},
+    virtual_text = { source = 'if_many', spacing = 2 },
+  }
+end
+
+local function apply(level, quiet)
+  vim.g.diagnostics_level = level
+  if level == 'off' then
+    vim.diagnostic.enable(false)
+  else
+    vim.diagnostic.enable(true)
+    vim.diagnostic.config(vim.tbl_extend('force', ui(), { severity = { min = min_sev[level] } }))
+  end
+  if not quiet then vim.notify('Diagnostics: ' .. level, vim.log.levels.INFO) end
+end
+
+local function cycle()
+  apply(levels[(idx[vim.g.diagnostics_level or 'all'] or 0) % #levels + 1])
+end
+
+apply(vim.g.diagnostics_level or 'all', true)
+
+vim.api.nvim_create_user_command('DiagnosticsLevel', function(o)
+  if o.args == '' then
+    cycle()
+  elseif vim.tbl_contains(levels, o.args) then
+    apply(o.args)
+  end
+end, { nargs = '?', complete = function() return levels end })
+
+vim.keymap.set('n', '<leader>td', cycle, { desc = 'Cycle diagnostic level (all / errors / off)' })
