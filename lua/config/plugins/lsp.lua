@@ -349,7 +349,7 @@ return {
       'sql-formatter',
       'prettier',
       'ruff',
-      -- 'markdownlint', -- CLI for nvim-lint markdown (see `config.plugins.lint`)
+      'markdownlint', -- CLI for nvim-lint markdown (see `config.plugins.lint`)
       'staticcheck',
       'goimports',
       'gofumpt',
