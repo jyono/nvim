@@ -29,11 +29,17 @@ return {
     },
     picker = {
       ui_select = true,
+      -- Only `file:` (and path:line) use fzf field syntax; `image:foo` etc. search literally.
+      matcher = {
+        file_pos = true,
+      },
       sources = {
         explorer = {
           watch = true,
           git_status = true,
           git_untracked = true,
+          hidden = true,
+          ignored = true,
         },
       },
     },
@@ -48,6 +54,20 @@ return {
   },
   config = function(_, opts)
     Snacks.setup(opts)
+
+    -- Snacks treats `word:rest` as a field filter (fzf syntax). Strings like `image:asset_id`
+    -- then match item.image (usually nil) and look broken. Quote unknown fields so `:` is literal.
+    do
+      local matcher = require('snacks.picker.core.matcher')
+      local prepare = matcher._prepare
+      function matcher:_prepare(pattern)
+        local field = pattern:match('^([%w_][%w_]+):(.*)$')
+        if field and field ~= 'file' and pattern:sub(1, 1) ~= "'" then
+          pattern = "'" .. pattern
+        end
+        return prepare(self, pattern)
+      end
+    end
 
     local picker = Snacks.picker
 
