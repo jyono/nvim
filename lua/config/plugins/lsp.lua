@@ -156,6 +156,37 @@ return {
 
     local capabilities = require('blink.cmp').get_lsp_capabilities()
 
+    -- nvim-lspconfig nests root_markers on 0.11.3+ (e.g. lua_ls), but vim.fs.root still
+    -- expects a flat string list even on 0.12 — see neovim/neovim#34099.
+    ---@param markers (string|string[])[]|string[]|nil
+    ---@return string[]|nil
+    local function flatten_root_markers(markers)
+      if not markers then
+        return nil
+      end
+
+      local needs_flatten = false
+      for _, item in ipairs(markers) do
+        if type(item) == 'table' then
+          needs_flatten = true
+          break
+        end
+      end
+      if not needs_flatten then
+        return markers
+      end
+
+      local flat = {}
+      for _, item in ipairs(markers) do
+        if type(item) == 'string' then
+          flat[#flat + 1] = item
+        else
+          vim.list_extend(flat, item)
+        end
+      end
+      return flat
+    end
+
     ---@type table<string, vim.lsp.Config>
     local servers = {
       clangd = {},
@@ -376,7 +407,9 @@ return {
       server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
 
       local def = vim.lsp.config[server_name] or {}
-      vim.lsp.config[server_name] = vim.tbl_deep_extend('force', def, server)
+      local merged = vim.tbl_deep_extend('force', def, server)
+      merged.root_markers = flatten_root_markers(merged.root_markers)
+      vim.lsp.config[server_name] = merged
       vim.lsp.enable(server_name)
     end
   end,
