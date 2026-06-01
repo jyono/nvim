@@ -189,8 +189,8 @@ return {
         -- UPDATED: The unified "God Mode" gopls config
         -- =========================================================================
         gopls = {
+          cmd = { 'gopls', '-remote=auto' },
           settings = {
-            cmd = { 'gopls', '-remote=auto' },
             gopls = {
               buildFlags = go_dev.gopls_build_flags,
               -- Completion settings
