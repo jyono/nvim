@@ -8,8 +8,7 @@
 
   Rationale
     Centralizing options keeps behavior predictable. Line numbers use `vim.opt`
-    only (no duplicate `vim.o.number`). Clipboard is configured in
-    `config.clipboard` (WSL / Linux / macOS).
+    only (no duplicate `vim.o.number`).
 
   See `:help vim.o`, `:help option-list`, `:help 'clipboard'`.
 ]]
@@ -31,7 +30,22 @@ vim.o.mouse = 'a'
 
 vim.o.showmode = false
 
-require('config.clipboard').setup()
+-- `"+y` / system paste: install wl-clipboard (Linux) or use block below (WSL only).
+vim.o.clipboard = 'unnamedplus'
+if vim.fn.has('wsl') == 1 then
+  local paste = {
+    '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe',
+    '-sta', '-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
+    'Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetText()',
+  }
+  local clip = '/mnt/c/Windows/System32/clip.exe'
+  vim.g.clipboard = {
+    name = 'WslClipboard',
+    copy = { ['+'] = clip, ['*'] = clip },
+    paste = { ['+'] = paste, ['*'] = paste },
+    cache_enabled = false,
+  }
+end
 
 vim.o.breakindent = true
 
