@@ -8,8 +8,8 @@
 
   Rationale
     Centralizing options keeps behavior predictable. Line numbers use `vim.opt`
-    only (no duplicate `vim.o.number`). Clipboard is scheduled after UI enter to
-    avoid slowing startup.
+    only (no duplicate `vim.o.number`). Clipboard is configured in
+    `config.clipboard` (WSL / Linux / macOS).
 
   See `:help vim.o`, `:help option-list`, `:help 'clipboard'`.
 ]]
@@ -31,7 +31,7 @@ vim.o.mouse = 'a'
 
 vim.o.showmode = false
 
-vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
+require('config.clipboard').setup()
 
 vim.o.breakindent = true
 
