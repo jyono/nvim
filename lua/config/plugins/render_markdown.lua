@@ -23,5 +23,15 @@ return {
     latex = { enabled = false },
     completions = { lsp = { enabled = true }, blink = { enabled = true } },
   },
+  config = function(_, opts)
+    local decorator = require 'render-markdown.lib.decorator'
+    local schedule = decorator.schedule
+    function decorator:schedule(debounce, ms, callback)
+      schedule(self, debounce, ms, function()
+        vim.defer_fn(callback, 0)
+      end)
+    end
+    require('render-markdown').setup(opts)
+  end,
 },
 }
