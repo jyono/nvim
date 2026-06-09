@@ -1,103 +1,49 @@
---[[
-  Path: lua/config/plugins/lsp.lua
-  Module: config.plugins.lsp
-
-  Purpose
-    Lazy spec for nvim-lspconfig + Mason + blink.cmp integration: LspAttach
-    keymaps, server table (clangd, gopls, pyright, rust, ts_ls, lua_ls, etc.),
-    Mason tool installer, and `vim.lsp.config` / `vim.lsp.enable` (Neovim 0.12+).
-
-  Rationale
-    Concentrates all LSP lifecycle logic in one place. Blink is both a
-    dependency (capabilities) and a top-level plugin spec in `blink.lua`.
-
-  See `:help lsp`, `:help mason.nvim`, `:help blink.cmp`.
-]]
-
 ---@type LazySpec
 return {
   {
-    -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
-      -- Load before this plugin's config runs so get_lsp_capabilities() exists even when
-      -- LSP startup happens before VimEnter (e.g. `nvim file.py`).
+      -- Before VimEnter so get_lsp_capabilities() exists on `nvim file.py`.
       { 'saghen/blink.cmp', version = '1.*' },
-      -- Automatically install LSPs and related tools to stdpath for Neovim
-      -- Mason must be loaded before its dependents so we need to set it up here.
       {
         'mason-org/mason.nvim',
-        ---@module 'mason.settings'
-        ---@type MasonSettings
         opts = {
           pip = {
-            -- PyPI packages (e.g. ruff) inherit the host pip environment. A
-            -- corporate `PIP_INDEX_URL` / pip.conf (e.g. AWS CodeArtifact with
-            -- expired creds) breaks installs with 401 or "No matching distribution".
-            -- `--isolated` ignores those; `-i` forces the public index for Mason only.
+            -- Corporate pip.conf / PIP_INDEX_URL (e.g. CodeArtifact) breaks Mason installs.
             install_args = { '--isolated', '-i', 'https://pypi.org/simple' },
           },
         },
       },
-      -- Maps LSP server names between nvim-lspconfig and Mason package names.
       'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
-
-      -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
     },
     config = function()
       local go_dev = require 'config.go'
 
-      -- LspAttach: buffer-local LSP maps and optional semantic highlight / inlay hints.
-      -- See :help LspAttach, :help lsp-vs-treesitter
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('config-lsp-attach', { clear = true }),
         callback = function(event)
-          -- NOTE: Remember that Lua is a real programming language, and as such it is possible
-          -- to define small helper and utility functions so you don't have to repeat yourself.
-          --
-          -- In this case, we create a function that lets us more easily define mappings specific
-          -- for LSP related items. It sets the mode, buffer and description for us each time.
           local map = function(keys, func, desc, mode)
-            mode = mode or 'n'
-            vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+            vim.keymap.set(mode or 'n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
-          -- Rename the variable under your cursor.
-          --  Most Language Servers support renaming across files, etc.
           map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
-
-          -- Execute a code action, usually your cursor needs to be on top of an error
-          -- or a suggestion from your LSP for this to activate.
           map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
-
-          -- WARN: This is not Goto Definition, this is Goto Declaration.
-          --  For example, in C this would take you to the header.
           map('grD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
-          -- Defer Snacks picker until keypress: on `nvim file.py`, LspAttach can run before VimEnter,
-          -- when lazy.nvim has not loaded snacks.nvim yet.
-          --
-          -- Nvim 0.11+ (incl. 0.12) sets *global* defaults grr/gri/grt/gO → vim.lsp.buf.* (quickfix / loclist).
-          -- Buffer-local maps override defaults; grr/gri/grd/gO/gW/grt use Snacks pickers.
-          -- `grd` is not a core default mapping; it maps goto-definition through the picker here.
+          -- Lazy-load Snacks on keypress; LspAttach can run before VimEnter.
+          -- Buffer-local maps override Nvim 0.12 defaults (grr/gri/grt/gO → quickfix).
           map('grr', function() Snacks.picker.lsp_references() end, '[R]eferences')
           map('gri', function() Snacks.picker.lsp_implementations() end, '[I]mplementation')
           map('grd', function() Snacks.picker.lsp_definitions() end, '[G]oto [D]efinition')
           map('gO', function() Snacks.picker.lsp_symbols() end, 'Open Document Symbols')
           map('gW', function() Snacks.picker.lsp_workspace_symbols() end, 'Open Workspace Symbols')
-          -- gopls may error on anonymous func types ("cannot find type name from type func(...)"):
-          -- put the cursor on a named identifier, or use grd on the symbol name — same LSP limit.
           map('grt', function() Snacks.picker.lsp_type_definitions() end, '[G]oto [T]ype Definition')
-
-          local function client_supports_method(client, method, bufnr) return client:supports_method(method, bufnr) end
 
           local client = vim.lsp.get_client_by_id(event.data.client_id)
 
-          -- =========================================================================
-          -- NEW: The gopls Semantic Tokens Workaround
-          -- =========================================================================
+          -- gopls advertises semantic tokens in capabilities but not server_capabilities.
           if client and client.name == 'gopls' and not client.server_capabilities.semanticTokensProvider then
             local semantic = client.config.capabilities.textDocument.semanticTokens
             if semantic then
@@ -111,27 +57,19 @@ return {
               }
             end
           end
-          -- =========================================================================
 
-          -- The following two autocommands are used to highlight references of the
-          -- word under your cursor when your cursor rests there for a little while.
-          --    See `:help CursorHold` for information about when this is executed
-          --
-          -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('config-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
               group = highlight_augroup,
               callback = vim.lsp.buf.document_highlight,
             })
-
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
               buffer = event.buf,
               group = highlight_augroup,
               callback = vim.lsp.buf.clear_references,
             })
-
             vim.api.nvim_create_autocmd('LspDetach', {
               group = vim.api.nvim_create_augroup('config-lsp-detach', { clear = true }),
               callback = function(event2)
@@ -141,25 +79,23 @@ return {
             })
           end
 
-          -- The following code creates a keymap to toggle inlay hints in your
-          -- code, if the language server you are using supports them
-          --
-          -- This may be unwanted, since they displace some of your code
-          if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            -- `<leader>th` is used in `config.keymaps` for terminal horizontal split.
-            map('<leader>ti', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle [I]nlay hints')
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
+            -- `<leader>th` is terminal horizontal split in config.keymaps.
+            map('<leader>ti', function()
+              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
+            end, '[T]oggle [I]nlay hints')
           end
         end,
       })
 
       local capabilities = require('blink.cmp').get_lsp_capabilities()
 
-      -- nvim-lspconfig nests root_markers on 0.11.3+ (e.g. lua_ls), but vim.fs.root still
-      -- expects a flat string list even on 0.12 — see neovim/neovim#34099.
+      --- nvim-lspconfig nests root_markers; vim.fs.root wants a flat list (neovim#34099).
       ---@param markers (string|string[])[]|string[]|nil
-      ---@return string[]|nil
       local function flatten_root_markers(markers)
-        if not markers then return nil end
+        if not markers then
+          return nil
+        end
 
         local needs_flatten = false
         for _, item in ipairs(markers) do
@@ -168,7 +104,9 @@ return {
             break
           end
         end
-        if not needs_flatten then return markers end
+        if not needs_flatten then
+          return markers
+        end
 
         local flat = {}
         for _, item in ipairs(markers) do
@@ -184,34 +122,21 @@ return {
       ---@type table<string, vim.lsp.Config>
       local servers = {
         clangd = {},
-
-        -- =========================================================================
-        -- UPDATED: The unified "God Mode" gopls config
-        -- =========================================================================
         gopls = {
           cmd = { 'gopls', '-remote=auto' },
           settings = {
             gopls = {
-              buildFlags = go_dev.gopls_build_flags,
-              -- Completion settings
+              buildFlags = go_dev.gopls_build_flags, -- monorepo tags; see config.go
               completeUnimported = true,
               usePlaceholders = true,
               deepCompletion = true,
               matcher = 'Fuzzy',
-
-              -- Hover and signature help
               hoverKind = 'FullDocumentation',
               linkTarget = 'pkg.go.dev',
               linksInHover = true,
-
-              -- Does this actually help?
               expandWorkspaceToModule = true,
-
-              -- Static analysis and diagnostics
-              staticcheck = true, -- THIS automatically runs the officially supported staticcheck suite
-
+              staticcheck = true,
               analyses = {
-                -- Only natively supported go vet / gopls checks go here
                 asmdecl = true,
                 assign = true,
                 atomic = true,
@@ -263,7 +188,6 @@ return {
                 unusedwrite = true,
                 useany = true,
               },
-
               hints = {
                 assignVariableTypes = true,
                 compositeLiteralFields = true,
@@ -273,7 +197,6 @@ return {
                 parameterNames = true,
                 rangeVariableTypes = true,
               },
-
               codelenses = {
                 gc_details = true,
                 generate = true,
@@ -284,12 +207,10 @@ return {
                 vendor = true,
                 vulncheck = true,
               },
-
               gofumpt = true,
               directoryFilters = { '-vendor' },
             },
           },
-
           on_attach = function(client, bufnr)
             if client.name == 'gopls' then
               vim.api.nvim_create_autocmd('BufWritePre', {
@@ -304,24 +225,16 @@ return {
             end
           end,
         },
-        -- =========================================================================
-
         pyright = {},
         rust_analyzer = {},
-        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {
           settings = {},
-          -- nvim-lspconfig nests lock-file markers on 0.11.3+; vim.fs.root still needs a flat list.
           root_dir = function(bufnr, on_dir)
-            local root_markers = flatten_root_markers({
+            local root_markers = flatten_root_markers {
               { 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', 'bun.lock' },
               { '.git' },
-            })
+            }
+            -- Prefer deno.json roots; skip when deno.lock is nested under a node project.
             local deno_root = vim.fs.root(bufnr, { 'deno.json', 'deno.jsonc' })
             local deno_lock_root = vim.fs.root(bufnr, { 'deno.lock' })
             local project_root = vim.fs.root(bufnr, root_markers)
@@ -334,23 +247,25 @@ return {
             on_dir(project_root or vim.fn.getcwd())
           end,
           on_attach = function(client, bufnr)
-            -- Prefer Prettier via conform.nvim (`<leader>f`); keep LSP out of formatting.
+            -- Prettier via conform (`<leader>f`), not ts_ls.
             client.server_capabilities.documentFormattingProvider = false
             client.server_capabilities.documentRangeFormattingProvider = false
             vim.b[bufnr].disable_autoformat = true
           end,
         },
-
-        stylua = {}, -- Used to format Lua code
-
-        -- Special Lua Config, as recommended by neovim help docs
+        stylua = {},
         lua_ls = {
           on_init = function(client)
-            client.server_capabilities.documentFormattingProvider = false -- Disable formatting (formatting is done by stylua)
+            client.server_capabilities.documentFormattingProvider = false
 
             if client.workspace_folders then
               local path = client.workspace_folders[1].name
-              if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
+              -- Respect project .luarc; only patch Neovim config workspace.
+              if path ~= vim.fn.stdpath 'config'
+                and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
+              then
+                return
+              end
             end
 
             client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
@@ -360,8 +275,6 @@ return {
               },
               workspace = {
                 checkThirdParty = false,
-                -- NOTE: this is a lot slower and will cause issues when working on your own configuration.
-                --  See https://github.com/neovim/nvim-lspconfig/issues/3189
                 library = vim.tbl_extend('force', vim.api.nvim_get_runtime_file('', true), {
                   '${3rd}/luv/library',
                   '${3rd}/busted/library',
@@ -369,29 +282,19 @@ return {
               },
             })
           end,
-          ---@type lspconfig.settings.lua_ls
           settings = {
-            Lua = {
-              format = { enable = false }, -- Disable formatting (formatting is done by stylua)
-            },
+            Lua = { format = { enable = false } },
           },
         },
       }
 
-      -- Ensure the servers and tools above are installed
-      --
-      -- To check the current status of installed tools and/or manually install
-      -- other tools, you can run
-      --    :Mason
-      --
-      -- You can press `g?` for help in this menu.
-      local ensure_installed = vim.tbl_keys(servers or {})
+      local ensure_installed = vim.tbl_keys(servers)
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
+        'stylua',
         'sql-formatter',
         'prettier',
         'ruff',
-        'markdownlint', -- CLI for nvim-lint markdown (see `config.plugins.lint`)
+        'markdownlint',
         'staticcheck',
         'goimports',
         'gofumpt',
@@ -402,23 +305,16 @@ return {
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
       require('mason-lspconfig').setup {
-        ensure_installed = {}, -- empty: LSP servers are enabled only from the explicit `servers` table above
+        ensure_installed = {}, -- servers come from the explicit `servers` table only
         automatic_installation = false,
-        -- We are removing the handlers block here to prevent Mason
-        -- from silently skipping unmanaged/globally-installed binaries.
       }
 
-      -- Ensure lspconfig is loaded so bundled server defaults exist (`:help lspconfig-all`).
       require 'lspconfig'
 
-      -- Explicitly set up all servers defined in the servers table (native `vim.lsp.config` API).
       for server_name, server in pairs(servers) do
         server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-
-        local def = vim.lsp.config[server_name] or {}
-        local merged = vim.tbl_deep_extend('force', def, server)
+        local merged = vim.tbl_deep_extend('force', vim.lsp.config[server_name] or {}, server)
         merged.root_markers = flatten_root_markers(merged.root_markers)
         vim.lsp.config[server_name] = merged
         vim.lsp.enable(server_name)

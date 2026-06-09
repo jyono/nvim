@@ -1,21 +1,4 @@
---[[
-  Path: lua/config/keymaps.lua
-  Module: config.keymaps
-
-  Purpose
-    Non-plugin (or minimally coupled) normal-mode maps: terminal escape,
-    window navigation and visual paste without clobbering a register.
-
-  Rationale
-    Keeping these maps here avoids scattering `vim.keymap.set` across plugin
-    config files and ensures they exist even before lazy.nvim finishes loading.
-    Explorer and `<leader>go` live in `config.plugins.snacks`.
-
-  See `:help vim.keymap.set()`.
-]]
-
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
-
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
@@ -28,5 +11,5 @@ vim.keymap.set('n', '<leader>tv', ':vsplit | terminal<CR>', { desc = 'Terminal v
 vim.keymap.set('n', '<leader>tt', ':tabnew | terminal<CR>', { desc = 'Terminal in new tab' })
 vim.keymap.set('n', '<leader>tf', ':ToggleTerm<CR>', { desc = 'Toggle floating terminal' })
 
+-- Keep the yanked text when pasting over a visual selection.
 vim.keymap.set('x', 'p', '"_dP', { noremap = true, silent = true })
-
