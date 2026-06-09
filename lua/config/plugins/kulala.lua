@@ -1,14 +1,3 @@
---[[
-  Path: lua/config/plugins/kulala.lua
-  Module: config.plugins.kulala
-
-  Purpose
-    Lazy spec for kulala.nvim: HTTP / REST client from the editor.
-
-  See https://github.com/mistweaverco/kulala.nvim
-]]
-
----@module 'lazy'
 ---@type LazySpec
 return {
   {
