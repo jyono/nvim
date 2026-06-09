@@ -16,12 +16,15 @@ vim.o.showmode = false
 vim.o.clipboard = 'unnamedplus'
 
 if vim.fn.has 'wsl' == 1 then
-  local paste = {
-    '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe',
-    '-sta', '-NoLogo', '-NoProfile', '-NonInteractive', '-Command',
-    'Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::GetText()',
-  }
+  local pwsh = '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
   local clip = '/mnt/c/Windows/System32/clip.exe'
+  -- Windows clipboard is CRLF; Neovim expects LF. Without tr, pasted lines show ^M (list=true).
+  local paste = {
+    'bash',
+    '-c',
+    pwsh
+      .. " -sta -NoLogo -NoProfile -NonInteractive -Command 'Add-Type -AssemblyName System.Windows.Forms; [Console]::Out.Write([System.Windows.Forms.Clipboard]::GetText())' | tr -d '\\r'",
+  }
   vim.g.clipboard = {
     name = 'WslClipboard',
     copy = { ['+'] = clip, ['*'] = clip },
