@@ -1,24 +1,8 @@
---[[
-  Path: lua/config/diagnostics.lua
-  Module: config.diagnostics
-
-  Purpose
-    One global `vim.diagnostic.config` for how LSP diagnostics render: signs,
-    virtual text, floating previews, underline, and sort order.
-
-  Rationale
-    A single module avoids conflicting `vim.diagnostic.config` calls (e.g. one
-    at startup and another inside LSP setup) overwriting each other.
-    `<leader>td` / `:DiagnosticsLevel` cycle display without disabling linters:
-    all (HINT+), errors (ERROR only), off.
-
-  See `:help vim.diagnostic.config()`, `:help diagnostic-severity`.
-]]
-
 local levels = { 'all', 'errors', 'off' }
 local idx = { all = 1, errors = 2, off = 3 }
 local min_sev = { all = vim.diagnostic.severity.HINT, errors = vim.diagnostic.severity.ERROR }
 
+-- Single vim.diagnostic.config here; lsp.lua does not override display.
 local function ui()
   return {
     severity_sort = true,
@@ -44,7 +28,9 @@ local function apply(level, quiet)
     vim.diagnostic.enable(true)
     vim.diagnostic.config(vim.tbl_extend('force', ui(), { severity = { min = min_sev[level] } }))
   end
-  if not quiet then vim.notify('Diagnostics: ' .. level, vim.log.levels.INFO) end
+  if not quiet then
+    vim.notify('Diagnostics: ' .. level, vim.log.levels.INFO)
+  end
 end
 
 local function cycle()

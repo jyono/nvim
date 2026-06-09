@@ -1,23 +1,7 @@
---[[
-  Path: lua/config/plugins/debug.lua
-  Module: config.plugins.debug
-
-  Purpose
-    nvim-dap + dap-ui + mason-nvim-dap (install `dlv`) + nvim-dap-go with **default
-    Delve behavior**, plus your `<leader>d` maps.
-
-  Rationale
-    Custom Delve flags, Mason-specific paths, and extra attach configs were easy
-    sources of flaky sessions. gopls tags stay in `config.go`; debugging uses
-    nvim-dap-go’s stock `dlv` integration.
-
-  See `:help dap.txt`, https://github.com/leoluz/nvim-dap-go
-]]
-
----@module 'lazy'
 ---@type LazySpec
 return {
   'mfussenegger/nvim-dap',
+  -- Stock nvim-dap-go / Delve defaults; Go tags live in config.go for gopls only.
   dependencies = {
     'rcarriga/nvim-dap-ui',
     'nvim-neotest/nvim-nio',
@@ -26,11 +10,7 @@ return {
     'leoluz/nvim-dap-go',
   },
   keys = {
-    {
-      '<leader>dc',
-      function() require('dap').continue() end,
-      desc = 'DAP: Continue / start (choose configuration)',
-    },
+    { '<leader>dc', function() require('dap').continue() end, desc = 'DAP: Continue / start (choose configuration)' },
     { '<leader>dC', function() require('dap').run_last() end, desc = 'DAP: Run last' },
     { '<leader>di', function() require('dap').step_into() end, desc = 'DAP: Step into' },
     { '<leader>dn', function() require('dap').step_over() end, desc = 'DAP: Step over (next)' },
@@ -50,18 +30,8 @@ return {
       end,
       desc = 'DAP: Terminate and close UI',
     },
-    {
-      '<leader>dt',
-      function() require('dap-go').debug_test() end,
-      ft = 'go',
-      desc = 'DAP: Debug nearest Go test',
-    },
-    {
-      '<leader>dL',
-      function() require('dap-go').debug_last_test() end,
-      ft = 'go',
-      desc = 'DAP: Debug last Go test',
-    },
+    { '<leader>dt', function() require('dap-go').debug_test() end, ft = 'go', desc = 'DAP: Debug nearest Go test' },
+    { '<leader>dL', function() require('dap-go').debug_last_test() end, ft = 'go', desc = 'DAP: Debug last Go test' },
     {
       '<leader>dF',
       function()
@@ -94,10 +64,8 @@ return {
       ensure_installed = { 'delve' },
     }
 
-    ---@diagnostic disable-next-line: missing-fields
     dapui.setup {
       icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
-      ---@diagnostic disable-next-line: missing-fields
       controls = {
         icons = {
           pause = '⏸',

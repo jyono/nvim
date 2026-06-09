@@ -1,41 +1,20 @@
---[[
-  Path: lua/config/plugins/which_key.lua
-  Module: config.plugins.which_key
-
-  Purpose
-    Lazy spec for which-key.nvim: discoverable pop-up of pending key sequences
-    and group labels for `<leader>` chains (search, toggle, git hunks, LSP).
-
-  Rationale
-    Loaded on `VimEnter` so it does not delay first screen paint. `spec` entries
-    document chains used elsewhere (Snacks picker, gitsigns, LSP maps).
-
-  See `:help which-key.nvim.txt`.
-]]
-
 ---@type LazySpec
 return {
-{ -- Useful plugin to show you pending keybinds.
-  'folke/which-key.nvim',
-  event = 'VimEnter',
-  ---@module 'which-key'
-  ---@type wk.Opts
-  ---@diagnostic disable-next-line: missing-fields
-  opts = {
-    -- delay between pressing a key and opening which-key (milliseconds)
-    delay = 0,
-    icons = { mappings = vim.g.have_nerd_font },
-
-    -- Document existing key chains
-    spec = {
-      { '<leader>d', group = 'DAP / [D]ebug', mode = { 'n' } },
-      { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
-      { '<leader>t', group = '[T]oggle' },
-      { '<leader>td', desc = 'Diagnostic level (all / errors / off)', mode = { 'n' } },
-      { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
-      { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
-      { 'gr', group = 'LSP Actions', mode = { 'n' } },
+  {
+    'folke/which-key.nvim',
+    event = 'VimEnter',
+    opts = {
+      delay = 0,
+      icons = { mappings = vim.g.have_nerd_font },
+      spec = {
+        { '<leader>d', group = 'DAP / [D]ebug', mode = { 'n' } },
+        { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>td', desc = 'Diagnostic level (all / errors / off)', mode = { 'n' } },
+        { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
+        { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
+        { 'gr', group = 'LSP Actions', mode = { 'n' } },
+      },
     },
   },
-},
 }
