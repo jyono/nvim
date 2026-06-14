@@ -12,7 +12,7 @@ return {
         { '<leader>t', group = '[T]oggle' },
         { '<leader>td', desc = 'Diagnostic level (all / errors / off)', mode = { 'n' } },
         { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
-        { '<leader>R', group = 'Kulala / [R]EST' },
+        { '<leader>K', group = '[K]ulala' },
         { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
         { 'gr', group = 'LSP Actions', mode = { 'n' } },
       },
