@@ -4,6 +4,10 @@ return {
     'lewis6991/gitsigns.nvim',
     -- No stage/reset maps; use git CLI or `<leader>gg` (LazyGit).
     opts = {
+      diffthis = {
+        split = 'belowright',
+        vertical = true,
+      },
       signs = {
         add = { text = '+' },
         change = { text = '~' },

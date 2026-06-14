@@ -39,6 +39,26 @@ return {
     config = function(_, opts)
       Snacks.setup(opts)
 
+      local explorer_confirm = require 'snacks.explorer.actions'.actions.confirm
+      require 'snacks.explorer.actions'.actions.confirm = function(picker, item, action)
+        if item and not item.dir and item.status and item.status:match '%S' then
+          Snacks.picker.actions.jump(picker, item, action)
+          vim.schedule(function() require 'gitsigns'.diffthis '@' end)
+          return
+        end
+        explorer_confirm(picker, item, action)
+      end
+
+      local git_diff = require 'snacks.picker.config.sources'.git_diff
+      git_diff.confirm = function(picker, item, action)
+        if not item then
+          return
+        end
+        Snacks.picker.actions.jump(picker, item, action)
+        local base = picker.opts.base or (item.staged and '@')
+        vim.schedule(function() require 'gitsigns'.diffthis(base) end)
+      end
+
       -- Snacks treats `word:rest` as a field filter; quote unknown fields so `:` is literal.
       do
         local matcher = require 'snacks.picker.core.matcher'
@@ -144,7 +164,14 @@ return {
       )
       vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git [G]UI (LazyGit)' })
       vim.keymap.set('n', '<leader>gs', with_git_root(picker.git_status), { desc = 'Git [s]tatus (changed files)' })
-      vim.keymap.set('n', '<leader>gd', with_git_root(picker.git_diff), { desc = 'Git [d]iff (hunks)' })
+      vim.keymap.set('n', '<leader>gd', function()
+        local root = git_root()
+        if not root then
+          Snacks.notify.warn('Not in a git repository (open a project file first)', { title = 'Snacks Picker' })
+          return
+        end
+        Snacks.picker.pick('git_diff', { cwd = root })
+      end, { desc = 'Git [d]iff (hunks)' })
       vim.keymap.set('n', '<leader>gM', function()
         local root = git_root()
         if not root then
@@ -156,7 +183,7 @@ return {
           Snacks.notify.warn('No main or master branch found', { title = 'Snacks Picker' })
           return
         end
-        picker.git_diff { cwd = root, base = base, group = true, title = 'Changes vs ' .. base }
+        Snacks.picker.pick('git_diff', { cwd = root, base = base, group = true, title = 'Changes vs ' .. base })
       end, { desc = 'Git diff vs [M]ain/master' })
       vim.keymap.set('n', '<leader>gl', with_git_root(picker.git_log), { desc = 'Git [l]og' })
       vim.keymap.set('n', '<leader>gf', with_git_root(picker.git_log_file), { desc = 'Git log current [f]ile' })
