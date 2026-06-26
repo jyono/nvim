@@ -10,6 +10,19 @@ return {
     opts = {
       explorer = { replace_netrw = true },
       picker = {
+        win = {
+          -- WSL often eats <C-v>; plain s for vertical split in picker/explorer.
+          input = {
+            keys = {
+              s = { 'edit_vsplit', mode = 'n' },
+            },
+          },
+          list = {
+            keys = {
+              s = 'edit_vsplit',
+            },
+          },
+        },
         formatters = {
           file = {
             filename_first = false,
