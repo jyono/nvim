@@ -24,9 +24,7 @@ return {
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('config-lsp-attach', { clear = true }),
         callback = function(event)
-          local map = function(keys, func, desc, mode)
-            vim.keymap.set(mode or 'n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
-          end
+          local map = function(keys, func, desc, mode) vim.keymap.set(mode or 'n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc }) end
 
           map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
           map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
@@ -81,9 +79,7 @@ return {
 
           if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
             -- `<leader>th` is terminal horizontal split in config.keymaps.
-            map('<leader>ti', function()
-              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
-            end, '[T]oggle [I]nlay hints')
+            map('<leader>ti', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle [I]nlay hints')
           end
         end,
       })
@@ -93,9 +89,7 @@ return {
       --- nvim-lspconfig nests root_markers; vim.fs.root wants a flat list (neovim#34099).
       ---@param markers (string|string[])[]|string[]|nil
       local function flatten_root_markers(markers)
-        if not markers then
-          return nil
-        end
+        if not markers then return nil end
 
         local needs_flatten = false
         for _, item in ipairs(markers) do
@@ -104,9 +98,7 @@ return {
             break
           end
         end
-        if not needs_flatten then
-          return markers
-        end
+        if not needs_flatten then return markers end
 
         local flat = {}
         for _, item in ipairs(markers) do
@@ -238,12 +230,8 @@ return {
             local deno_root = vim.fs.root(bufnr, { 'deno.json', 'deno.jsonc' })
             local deno_lock_root = vim.fs.root(bufnr, { 'deno.lock' })
             local project_root = vim.fs.root(bufnr, root_markers)
-            if deno_lock_root and (not project_root or #deno_lock_root > #project_root) then
-              return
-            end
-            if deno_root and (not project_root or #deno_root >= #project_root) then
-              return
-            end
+            if deno_lock_root and (not project_root or #deno_lock_root > #project_root) then return end
+            if deno_root and (not project_root or #deno_root >= #project_root) then return end
             on_dir(project_root or vim.fn.getcwd())
           end,
           on_attach = function(client, bufnr)
@@ -261,11 +249,7 @@ return {
             if client.workspace_folders then
               local path = client.workspace_folders[1].name
               -- Respect project .luarc; only patch Neovim config workspace.
-              if path ~= vim.fn.stdpath 'config'
-                and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
-              then
-                return
-              end
+              if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
             end
 
             client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
