@@ -12,6 +12,7 @@ vim.g.loaded_netrwFileHandlers = 1
 
 vim.o.mouse = 'a'
 vim.o.showmode = false
+vim.o.statusline = '%f %m%=%2l:%-2v'
 -- Native Linux: needs wl-clipboard. WSL overrides below to use Windows clipboard.
 vim.o.clipboard = 'unnamedplus'
 
