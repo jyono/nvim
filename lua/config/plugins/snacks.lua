@@ -52,16 +52,6 @@ return {
     config = function(_, opts)
       Snacks.setup(opts)
 
-      local explorer_confirm = require 'snacks.explorer.actions'.actions.confirm
-      require 'snacks.explorer.actions'.actions.confirm = function(picker, item, action)
-        if item and not item.dir and item.status and item.status:match '%S' then
-          Snacks.picker.actions.jump(picker, item, action)
-          vim.schedule(function() require 'gitsigns'.diffthis '@' end)
-          return
-        end
-        explorer_confirm(picker, item, action)
-      end
-
       local git_diff = require 'snacks.picker.config.sources'.git_diff
       git_diff.confirm = function(picker, item, action)
         if not item then
