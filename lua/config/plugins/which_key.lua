@@ -10,7 +10,6 @@ return {
         { '<leader>d', group = 'DAP / [D]ebug', mode = { 'n' } },
         { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
         { '<leader>t', group = '[T]oggle' },
-        { '<leader>td', desc = 'Diagnostic level (all / errors / off)', mode = { 'n' } },
         { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
         { '<leader>k', group = '[k]ulala' },
         { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
