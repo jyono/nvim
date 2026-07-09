@@ -29,6 +29,22 @@ return {
       desc = 'DAP: Terminate and close UI',
     },
     {
+      '<leader>da',
+      function() require('config.dap').attach_remote() end,
+      ft = 'go',
+      desc = 'DAP: Attach to external Delve (headless)',
+    },
+    {
+      '<leader>dA',
+      function()
+        local default = tostring(require('config.dap').attach_port())
+        local port = tonumber(vim.fn.input('Delve port: ', default)) or tonumber(default)
+        require('config.dap').attach_remote { port = port }
+      end,
+      ft = 'go',
+      desc = 'DAP: Attach to external Delve (pick port)',
+    },
+    {
       '<leader>dt',
       function() require('dap-go').debug_test() end,
       ft = 'go',
@@ -121,6 +137,26 @@ return {
       delve = {
         path = dlv,
         build_flags = go_dev.gopls_build_flags,
+      },
+      dap_configurations = {
+        {
+          type = 'go',
+          name = 'Attach remote (Delve headless :2345)',
+          request = 'attach',
+          mode = 'remote',
+          host = '127.0.0.1',
+          port = 2345,
+        },
+        {
+          type = 'go',
+          name = 'Attach remote (env port)',
+          request = 'attach',
+          mode = 'remote',
+          host = '127.0.0.1',
+          port = function()
+            return require('config.dap').attach_port()
+          end,
+        },
       },
     }
   end,
