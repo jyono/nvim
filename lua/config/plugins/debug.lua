@@ -1,19 +1,17 @@
 ---@type LazySpec
 return {
   'mfussenegger/nvim-dap',
-  -- Stock nvim-dap-go / Delve defaults; Go tags live in config.go for gopls only.
   dependencies = {
     'rcarriga/nvim-dap-ui',
     'nvim-neotest/nvim-nio',
     'mason-org/mason.nvim',
-    'jay-babu/mason-nvim-dap.nvim',
     'leoluz/nvim-dap-go',
   },
   keys = {
-    { '<leader>dc', function() require('dap').continue() end, desc = 'DAP: Continue / start (choose configuration)' },
+    { '<leader>dc', function() require('dap').continue() end, desc = 'DAP: Continue / start' },
     { '<leader>dC', function() require('dap').run_last() end, desc = 'DAP: Run last' },
     { '<leader>di', function() require('dap').step_into() end, desc = 'DAP: Step into' },
-    { '<leader>dn', function() require('dap').step_over() end, desc = 'DAP: Step over (next)' },
+    { '<leader>dn', function() require('dap').step_over() end, desc = 'DAP: Step over' },
     { '<leader>dO', function() require('dap').step_out() end, desc = 'DAP: Step out' },
     { '<leader>db', function() require('dap').toggle_breakpoint() end, desc = 'DAP: Toggle breakpoint' },
     {
@@ -30,55 +28,52 @@ return {
       end,
       desc = 'DAP: Terminate and close UI',
     },
-    { '<leader>dt', function() require('dap-go').debug_test() end, ft = 'go', desc = 'DAP: Debug nearest Go test' },
-    { '<leader>dL', function() require('dap-go').debug_last_test() end, ft = 'go', desc = 'DAP: Debug last Go test' },
+    {
+      '<leader>dt',
+      function() require('dap-go').debug_test() end,
+      ft = 'go',
+      desc = 'DAP: Debug nearest Go test',
+    },
+    {
+      '<leader>dL',
+      function() require('dap-go').debug_last_test() end,
+      ft = 'go',
+      desc = 'DAP: Debug last Go test',
+    },
     {
       '<leader>dF',
       function()
-        if vim.bo.filetype ~= 'go' then
-          vim.notify('DAP: not a Go buffer', vim.log.levels.WARN)
-          return
-        end
+        local go_dev = require 'config.go'
         require('dap').run(
           {
             type = 'go',
-            name = 'Debug this file',
+            name = 'Debug file',
             request = 'launch',
             program = vim.fn.expand '%:p',
-            cwd = require('config.go').mod_root(),
+            cwd = go_dev.mod_root(),
+            buildFlags = go_dev.gopls_build_flags,
           },
           { new = true }
         )
       end,
       ft = 'go',
-      desc = 'DAP: Go — debug this file',
+      desc = 'DAP: Debug current Go file',
     },
   },
   config = function()
     local dap = require 'dap'
     local dapui = require 'dapui'
+    local go_dev = require 'config.go'
 
-    require('mason-nvim-dap').setup {
-      automatic_installation = false,
-      handlers = {},
-      ensure_installed = { 'delve' },
-    }
+    local mason_dlv = vim.fs.joinpath(vim.fn.stdpath 'data', 'mason', 'bin', 'dlv')
+    local dlv = (vim.uv.fs_stat(mason_dlv) and mason_dlv) or vim.fn.exepath 'dlv'
+    if dlv == '' then
+      vim.notify('Delve not found. Run :MasonInstall delve', vim.log.levels.ERROR, { title = 'DAP' })
+      return
+    end
 
     dapui.setup {
       icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
-      controls = {
-        icons = {
-          pause = '⏸',
-          play = '▶',
-          step_into = '⏎',
-          step_over = '⏭',
-          step_out = '⏮',
-          step_back = 'b',
-          run_last = '▶▶',
-          terminate = '⏹',
-          disconnect = '⏏',
-        },
-      },
       layouts = {
         {
           elements = {
@@ -112,13 +107,21 @@ return {
       vim.fn.sign_define(tp, { text = icon, texthl = hl, numhl = hl })
     end
 
-    dap.listeners.after.event_initialized['dapui_config'] = function()
+    dap.listeners.after.event_initialized['dapui'] = function()
       dapui.open { reset = true }
     end
-    dap.listeners.before.event_exited['dapui_config'] = function()
+    dap.listeners.before.event_terminated['dapui'] = function()
+      dapui.close()
+    end
+    dap.listeners.before.event_exited['dapui'] = function()
       dapui.close()
     end
 
-    require('dap-go').setup()
+    require('dap-go').setup {
+      delve = {
+        path = dlv,
+        build_flags = go_dev.gopls_build_flags,
+      },
+    }
   end,
 }
