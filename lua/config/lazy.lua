@@ -9,7 +9,9 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
-require('lazy').setup(require 'config.plugins.spec', {
+require('lazy').setup({
+  { import = 'config.plugins' },
+}, {
   -- Avoid :checkhealth lazy ERROR when hererocks/luarocks is not installed.
   rocks = { enabled = false },
   ui = {
