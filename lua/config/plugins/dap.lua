@@ -1,3 +1,36 @@
+local default_attach_host = '127.0.0.1'
+local default_attach_port = 2345
+
+local function attach_port()
+  local from_env = vim.env.DAP_ATTACH_PORT or vim.env.DLV_PORT
+  if from_env and from_env ~= '' then
+    return tonumber(from_env) or default_attach_port
+  end
+  local listen = vim.env.DLV_LISTEN
+  if listen and listen ~= '' then
+    local port = listen:match ':(%d+)$'
+    if port then
+      return tonumber(port) or default_attach_port
+    end
+  end
+  return default_attach_port
+end
+
+local function attach_remote(opts)
+  opts = opts or {}
+  require('dap').run(
+    {
+      type = 'go',
+      name = 'Attach remote (Delve headless)',
+      request = 'attach',
+      mode = 'remote',
+      host = opts.host or default_attach_host,
+      port = opts.port or attach_port(),
+    },
+    { new = true }
+  )
+end
+
 ---@type LazySpec
 return {
   'mfussenegger/nvim-dap',
@@ -30,16 +63,16 @@ return {
     },
     {
       '<leader>da',
-      function() require('config.dap').attach_remote() end,
+      function() attach_remote() end,
       ft = 'go',
       desc = 'DAP: Attach to external Delve (headless)',
     },
     {
       '<leader>dA',
       function()
-        local default = tostring(require('config.dap').attach_port())
+        local default = tostring(attach_port())
         local port = tonumber(vim.fn.input('Delve port: ', default)) or tonumber(default)
-        require('config.dap').attach_remote { port = port }
+        attach_remote { port = port }
       end,
       ft = 'go',
       desc = 'DAP: Attach to external Delve (pick port)',
@@ -153,9 +186,7 @@ return {
           request = 'attach',
           mode = 'remote',
           host = '127.0.0.1',
-          port = function()
-            return require('config.dap').attach_port()
-          end,
+          port = attach_port,
         },
       },
     }
