@@ -24,7 +24,7 @@ demo/dap/
 
 - Go
 - Delve (`dlv`) — Mason install: `:MasonInstall delve`, or on `PATH`
-- nvim config with DAP enabled (`lua/config/plugins/debug.lua`)
+- nvim config with DAP enabled (`lua/config/plugins/dap.lua`)
 
 ## Quick start
 
