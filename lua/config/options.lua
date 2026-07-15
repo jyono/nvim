@@ -13,12 +13,13 @@ vim.g.loaded_netrwFileHandlers = 1
 vim.o.mouse = 'a'
 vim.o.showmode = false
 vim.o.statusline = '%f %m%=%2l:%-2v'
--- Native Linux: needs wl-clipboard. WSL overrides below to use Windows clipboard.
+-- Native Linux / WSLg: wl-clipboard (auto-detected). Headless WSL: clip.exe fallback below.
 vim.o.clipboard = 'unnamedplus'
 
-if vim.fn.has 'wsl' == 1 then
+-- WSL without WSLg has no wl-copy; use Windows clip.exe + PowerShell for system clipboard.
+if vim.fn.has 'wsl' == 1 and vim.fn.executable 'wl-copy' ~= 1 then
   local pwsh = '/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe'
-  local clip = '/mnt/c/Windows/System32/clip.exe'
+  local clip = { '/mnt/c/Windows/System32/clip.exe' }
   -- Windows clipboard is CRLF; Neovim expects LF. Without tr, pasted lines show ^M (list=true).
   local paste = {
     'bash',
