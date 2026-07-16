@@ -278,7 +278,6 @@ return {
         'sql-formatter',
         'prettier',
         'ruff',
-        'markdownlint',
         'staticcheck',
         'goimports',
         'gofumpt',
