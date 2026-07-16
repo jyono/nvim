@@ -1,13 +1,13 @@
 ---@type LazySpec
 return {
   {
-    'nickkadutskyi/jb.nvim',
+    'EdenEast/nightfox.nvim',
     lazy = false,
     priority = 1000,
     config = function()
-      require('jb').setup {}
+      require('nightfox').setup {}
       vim.o.background = 'dark'
-      vim.cmd.colorscheme 'jb'
+      vim.cmd.colorscheme 'carbonfox'
     end,
   },
 }
