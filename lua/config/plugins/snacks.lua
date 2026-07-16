@@ -116,6 +116,72 @@ return {
         Snacks.explorer()
       end
 
+      -- Push-model LSP servers (pyright, ts_ls, rust_analyzer, lua_ls) only diagnose
+      -- OPEN files, and Snacks' diagnostics source just reads vim.diagnostic.get().
+      -- So to see diagnostics for a whole directory we must load every file under it
+      -- (triggers LspAttach), wait for analysis to settle, then show the filtered picker.
+      -- Loaded buffers stay open: unloading them detaches the LSP and clears the diagnostics.
+      local function diagnostics_in_dir()
+        local default_dir = vim.fn.expand '%:p:h'
+        if default_dir == '' then default_dir = vim.fn.getcwd() end
+
+        vim.ui.input({ prompt = 'Diagnostics in directory: ', default = default_dir, completion = 'dir' }, function(input)
+          if not input or vim.trim(input) == '' then return end
+          local dir = vim.fs.normalize(vim.fn.fnamemodify(input, ':p'))
+          if vim.fn.isdirectory(dir) ~= 1 then
+            Snacks.notify.warn('Not a directory: ' .. dir, { title = 'Diagnostics' })
+            return
+          end
+
+          -- rg respects .gitignore, so node_modules/vendor/target are skipped.
+          local files = vim.fn.systemlist { 'rg', '--files', dir }
+          if vim.v.shell_error ~= 0 then files = vim.fn.globpath(dir, '**/*', false, true) end
+          files = vim.tbl_filter(function(f) return vim.fn.filereadable(f) == 1 end, files)
+          if #files == 0 then
+            Snacks.notify.warn('No files under ' .. dir, { title = 'Diagnostics' })
+            return
+          end
+
+          local CAP = 200
+          if #files > CAP then
+            local prompt = ('%d files under this directory. Loading them forces the LSP to analyze each and keeps them open. Continue?'):format(#files)
+            if vim.fn.confirm(prompt, '&Yes\n&No', 2) ~= 1 then return end
+          end
+
+          for _, file in ipairs(files) do
+            vim.fn.bufload(vim.fn.bufadd(file))
+          end
+
+          local group = vim.api.nvim_create_augroup('diagnostics-in-dir', { clear = true })
+          local timer = assert(vim.uv.new_timer())
+          local done = false
+          local function finish()
+            if done then return end
+            done = true
+            timer:stop()
+            timer:close()
+            pcall(vim.api.nvim_del_augroup_by_id, group)
+            vim.schedule(function()
+              Snacks.picker.diagnostics {
+                filter = { cwd = dir },
+                title = 'Diagnostics in ' .. vim.fn.fnamemodify(dir, ':~'),
+              }
+            end)
+          end
+
+          -- Debounce: reopen the countdown on each diagnostic update; open once quiet.
+          vim.api.nvim_create_autocmd('DiagnosticChanged', {
+            group = group,
+            callback = function()
+              timer:stop()
+              timer:start(1200, 0, finish)
+            end,
+          })
+          timer:start(1200, 0, finish) -- open even if nothing ever reports
+          vim.defer_fn(finish, 8000) -- hard cap so we never hang
+        end)
+      end
+
       vim.keymap.set('n', '<leader>x', explorer_toggle, { desc = 'Explorer toggle' })
       vim.keymap.set('n', '<leader>sh', picker.help, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', picker.keymaps, { desc = '[S]earch [K]eymaps' })
@@ -125,12 +191,7 @@ return {
       vim.keymap.set('n', '<leader>sg', picker.grep, { desc = '[S]earch by [G]rep' })
       vim.keymap.set('n', '<leader>sd', picker.diagnostics, { desc = '[S]earch [D]iagnostics' })
       vim.keymap.set('n', '<leader>sq', picker.diagnostics_buffer, { desc = '[S]earch buffer diagnostics [Q]uickfix' })
-      vim.keymap.set(
-        'n',
-        '<leader>sD',
-        function() picker.diagnostics { cwd = vim.fn.expand '%:p:h', title = 'Diagnostics in current directory' } end,
-        { desc = '[S]earch [D]iagnostics in current directory' }
-      )
+      vim.keymap.set('n', '<leader>sD', diagnostics_in_dir, { desc = '[S]earch [D]iagnostics in a directory (force LSP)' })
       vim.keymap.set('n', '<leader>sr', picker.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', picker.recent, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader>sc', picker.commands, { desc = '[S]earch [C]ommands' })
