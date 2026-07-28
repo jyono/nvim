@@ -62,11 +62,17 @@ return {
         vim.schedule(function() require 'gitsigns'.diffthis(base) end)
       end
 
-      -- Snacks treats `word:rest` as a field filter; quote unknown fields so `:` is literal.
+      -- Snacks/fzf: `! ^ ' $` are metachars; no backslash escapes. Also `word:rest` is a field filter.
+      -- - `\!ok` → exact `!ok` (literal bang)
+      -- - unknown `field:` → quoted so `:` stays literal (`file:` still special)
       do
         local matcher = require 'snacks.picker.core.matcher'
         local prepare = matcher._prepare
         function matcher:_prepare(pattern)
+          if pattern:find('\\[!^\'$]', 1) then
+            pattern = pattern:gsub('\\([!^\'$])', '%1')
+            if pattern:sub(1, 1) ~= "'" then pattern = "'" .. pattern end
+          end
           local field = pattern:match '^([%w_][%w_]+):(.*)$'
           if field and field ~= 'file' and pattern:sub(1, 1) ~= "'" then pattern = "'" .. pattern end
           return prepare(self, pattern)
