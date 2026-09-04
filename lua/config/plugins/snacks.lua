@@ -26,8 +26,10 @@ return {
         formatters = {
           file = {
             filename_first = false,
-            truncate = false,
-          }
+            -- `truncate = false` is ignored (falls through to center `…`).
+            -- Length is always max(list width, min_width); bump min_width to keep full paths.
+            min_width = 300,
+          },
         },
         ui_select = true,
         -- Only `file:` uses fzf field syntax; `image:foo` etc. should search literally.
