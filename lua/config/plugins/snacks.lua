@@ -49,6 +49,7 @@ return {
       input = {},
       gitbrowse = { what = 'file' },
       lazygit = {},
+      terminal = {},
       words = {},
     },
     config = function(_, opts)

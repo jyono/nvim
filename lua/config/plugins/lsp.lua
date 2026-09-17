@@ -78,7 +78,7 @@ return {
           end
 
           if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            -- `<leader>th` is terminal horizontal split in config.keymaps.
+            -- `<leader>tf` is floating terminal in config.keymaps.
             map('<leader>ti', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle [I]nlay hints')
           end
         end,
@@ -241,7 +241,6 @@ return {
             vim.b[bufnr].disable_autoformat = true
           end,
         },
-        stylua = {},
         lua_ls = {
           on_init = function(client)
             client.server_capabilities.documentFormattingProvider = false
