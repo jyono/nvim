@@ -54,16 +54,6 @@ return {
     config = function(_, opts)
       Snacks.setup(opts)
 
-      local git_diff = require 'snacks.picker.config.sources'.git_diff
-      git_diff.confirm = function(picker, item, action)
-        if not item then
-          return
-        end
-        Snacks.picker.actions.jump(picker, item, action)
-        local base = picker.opts.base or (item.staged and '@')
-        vim.schedule(function() require 'gitsigns'.diffthis(base) end)
-      end
-
       -- Snacks/fzf: `! ^ ' $` are metachars; no backslash escapes. Also `word:rest` is a field filter.
       -- - `\!ok` → exact `!ok` (literal bang)
       -- - unknown `field:` → quoted so `:` stays literal (`file:` still special)
@@ -83,29 +73,10 @@ return {
 
       local picker = Snacks.picker
 
-      local function git_root() return Snacks.git.get_root() end
-
-      local function git_rev_ok(root, ref) return vim.fn.system { 'git', '-C', root, 'rev-parse', '--verify', ref } ~= '' end
-
-      local function git_main_ref(root)
-        -- Default branch (main/master), not the current branch's upstream.
-        local candidates = {}
-        local origin_head = vim.trim(vim.fn.system { 'git', '-C', root, 'rev-parse', '--abbrev-ref', 'origin/HEAD' })
-        if origin_head ~= '' and not origin_head:match '^fatal' then table.insert(candidates, origin_head) end
-        for _, ref in ipairs { 'origin/main', 'origin/master', 'main', 'master' } do
-          table.insert(candidates, ref)
-        end
-        local seen = {}
-        for _, ref in ipairs(candidates) do
-          if not seen[ref] and git_rev_ok(root, ref) then return ref end
-          seen[ref] = true
-        end
-      end
-
       local function with_git_root(pick)
         return function(pick_opts)
           pick_opts = pick_opts or {}
-          local root = git_root()
+          local root = Snacks.git.get_root()
           if not root then
             Snacks.notify.warn('Not in a git repository (open a project file first)', { title = 'Snacks Picker' })
             return
@@ -234,35 +205,14 @@ return {
         function() picker.files { title = 'Find All Files (Hidden + Ignored)', hidden = true, ignored = true, exclude = { '.git/' } } end,
         { desc = '[S]earch [A]ll [F]iles' }
       )
-      vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git [G]UI (LazyGit)' })
-      vim.keymap.set('n', '<leader>gs', with_git_root(picker.git_status), { desc = 'Git [s]tatus (changed files)' })
-      vim.keymap.set('n', '<leader>gd', function()
-        local root = git_root()
-        if not root then
-          Snacks.notify.warn('Not in a git repository (open a project file first)', { title = 'Snacks Picker' })
-          return
-        end
-        Snacks.picker.pick('git_diff', { cwd = root })
-      end, { desc = 'Git [d]iff (hunks)' })
-      vim.keymap.set('n', '<leader>gM', function()
-        local root = git_root()
-        if not root then
-          Snacks.notify.warn('Not in a git repository (open a project file first)', { title = 'Snacks Picker' })
-          return
-        end
-        local base = git_main_ref(root)
-        if not base then
-          Snacks.notify.warn('No main or master branch found', { title = 'Snacks Picker' })
-          return
-        end
-        Snacks.picker.pick('git_diff', { cwd = root, base = base, group = true, title = 'Changes vs ' .. base })
-      end, { desc = 'Git diff vs [M]ain/master' })
-      vim.keymap.set('n', '<leader>gl', with_git_root(picker.git_log), { desc = 'Git [l]og' })
+      -- Git: blame/log/status/browse here; stage/reset/diff/commit → lazygit.
+      vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git lazy[g]it' })
       vim.keymap.set('n', '<leader>gf', with_git_root(picker.git_log_file), { desc = 'Git log current [f]ile' })
-      vim.keymap.set('n', '<leader>gL', with_git_root(picker.git_log_line), { desc = 'Git log current [L]ine' })
+      vim.keymap.set('n', '<leader>gl', with_git_root(picker.git_log), { desc = 'Git [l]og' })
       vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Git [o]pen in browser' })
-      vim.keymap.set({ 'n', 't' }, ']]', function() Snacks.words.jump(vim.v.count1) end, { desc = 'Next LSP reference' })
-      vim.keymap.set({ 'n', 't' }, '[[', function() Snacks.words.jump(-vim.v.count1) end, { desc = 'Prev LSP reference' })
+      vim.keymap.set('n', '<leader>gs', with_git_root(picker.git_status), { desc = 'Git [s]tatus (changed files)' })
+      vim.keymap.set('n', ']]', function() Snacks.words.jump(vim.v.count1) end, { desc = 'Next LSP reference' })
+      vim.keymap.set('n', '[[', function() Snacks.words.jump(-vim.v.count1) end, { desc = 'Prev LSP reference' })
     end,
   },
 }

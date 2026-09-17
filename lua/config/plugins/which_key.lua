@@ -6,13 +6,15 @@ return {
     opts = {
       delay = 0,
       icons = { mappings = vim.g.have_nerd_font },
+      -- Drop `local` so buffer maps (gitsigns) interleave A–Z with global ones.
+      sort = { 'group', 'alphanum', 'mod' },
       spec = {
         { '<leader>d', group = 'DAP / [D]ebug', mode = { 'n' } },
+        { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
+        { '<leader>k', group = '[k]ulala' },
         { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
         { '<leader>t', group = '[T]oggle' },
         { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
-        { '<leader>k', group = '[k]ulala' },
-        { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
         { 'gr', group = 'LSP Actions', mode = { 'n' } },
       },
     },
