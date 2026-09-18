@@ -11,7 +11,6 @@ vim.g.loaded_netrwSettings = 1
 vim.g.loaded_netrwFileHandlers = 1
 
 vim.o.mouse = 'a'
-vim.o.showmode = false
 vim.o.statusline = '%f %m%=%2l:%-2v'
 -- Native Linux / WSLg: wl-clipboard (auto-detected). Headless WSL: clip.exe fallback below.
 vim.o.clipboard = 'unnamedplus'
