@@ -55,19 +55,6 @@ return {
 
       local picker = Snacks.picker
 
-      local function with_git_root(pick)
-        return function(pick_opts)
-          pick_opts = pick_opts or {}
-          local root = Snacks.git.get_root()
-          if not root then
-            Snacks.notify.warn('Not in a git repository (open a project file first)', { title = 'Snacks Picker' })
-            return
-          end
-          pick_opts.cwd = root
-          return pick(pick_opts)
-        end
-      end
-
       local function explorer_toggle()
         local current = Snacks.picker.current
         if current and current.opts.source == 'explorer' then
@@ -120,12 +107,9 @@ return {
         function() picker.files { title = 'Find All Files (Hidden + Ignored)', hidden = true, ignored = true, exclude = { '.git/' } } end,
         { desc = '[S]earch [A]ll [F]iles' }
       )
-      -- Git: blame/log/status/browse here; stage/reset/diff/commit → lazygit.
+      -- Git: status/stage/diff/log/commit all live in lazygit; signs and hunk nav in gitsigns.
       vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git lazy[g]it' })
-      vim.keymap.set('n', '<leader>gf', with_git_root(picker.git_log_file), { desc = 'Git log current [f]ile' })
-      vim.keymap.set('n', '<leader>gl', with_git_root(picker.git_log), { desc = 'Git [l]og' })
       vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Git [o]pen in browser' })
-      vim.keymap.set('n', '<leader>gs', with_git_root(picker.git_status), { desc = 'Git [s]tatus (changed files)' })
       vim.keymap.set('n', ']]', function() Snacks.words.jump(vim.v.count1) end, { desc = 'Next LSP reference' })
       vim.keymap.set('n', '[[', function() Snacks.words.jump(-vim.v.count1) end, { desc = 'Prev LSP reference' })
     end,
