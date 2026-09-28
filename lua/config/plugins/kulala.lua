@@ -2,7 +2,7 @@ local function paste_from_curl()
   -- Upstream from_curl only reads `+`. On WSL, curl may sit in `"` or arrive with CRLF.
   local function looks_like_curl(s)
     s = vim.trim(s or '')
-    return s:find('^[Cc]url%.?e?x?e?%s') ~= nil or s:find('/curl%s') ~= nil
+    return s:find '^[Cc]url%.?e?x?e?%s' ~= nil or s:find '/curl%s' ~= nil
   end
 
   local curl
@@ -22,7 +22,7 @@ local function paste_from_curl()
     return
   end
 
-  local Bridge = require('kulala.cmd.kulala_core_bridge')
+  local Bridge = require 'kulala.cmd.kulala_core_bridge'
   if not Bridge.enabled() then
     vim.notify('kulala: kulala-core not available', vim.log.levels.ERROR)
     return

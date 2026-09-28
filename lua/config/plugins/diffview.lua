@@ -16,15 +16,13 @@ return {
           end
           local candidates = {}
           local origin_head = vim.trim(vim.fn.system { 'git', '-C', root, 'rev-parse', '--abbrev-ref', 'origin/HEAD' })
-          if origin_head ~= '' and not origin_head:match '^fatal' then
-            candidates[#candidates + 1] = origin_head
-          end
+          if origin_head ~= '' and not origin_head:match '^fatal' then candidates[#candidates + 1] = origin_head end
           for _, ref in ipairs { 'origin/main', 'origin/master', 'main', 'master' } do
             candidates[#candidates + 1] = ref
           end
           local seen = {}
           for _, ref in ipairs(candidates) do
-            if not seen[ref] and vim.fn.system({ 'git', '-C', root, 'rev-parse', '--verify', ref }) ~= '' then
+            if not seen[ref] and vim.fn.system { 'git', '-C', root, 'rev-parse', '--verify', ref } ~= '' then
               vim.cmd('DiffviewOpen ' .. ref .. '...HEAD')
               return
             end

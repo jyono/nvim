@@ -19,4 +19,4 @@ debug: load-api-env
 
 # Terminal 2 (nvim): open cmd/main.go, set breakpoints, press <leader>da
 attach-env:
-	@echo "export DAP_ATTACH_PORT=$(DLV_PORT)"
+	@echo "export DLV_PORT=$(DLV_PORT)"

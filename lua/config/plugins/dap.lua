@@ -1,34 +1,8 @@
-local default_attach_host = '127.0.0.1'
-local default_attach_port = 2345
-
-local function attach_port()
-  local from_env = vim.env.DAP_ATTACH_PORT or vim.env.DLV_PORT
-  if from_env and from_env ~= '' then
-    return tonumber(from_env) or default_attach_port
-  end
-  local listen = vim.env.DLV_LISTEN
-  if listen and listen ~= '' then
-    local port = listen:match ':(%d+)$'
-    if port then
-      return tonumber(port) or default_attach_port
-    end
-  end
-  return default_attach_port
-end
-
-local function attach_remote(opts)
-  opts = opts or {}
-  require('dap').run(
-    {
-      type = 'go',
-      name = 'Attach remote (Delve headless)',
-      request = 'attach',
-      mode = 'remote',
-      host = opts.host or default_attach_host,
-      port = opts.port or attach_port(),
-    },
-    { new = true }
-  )
+-- Prefill for the attach prompt: DLV_PORT, else the port out of DLV_LISTEN (host:port).
+local function default_attach_port()
+  local port = vim.env.DLV_PORT
+  if not port or port == '' then port = (vim.env.DLV_LISTEN or ''):match ':(%d+)$' end
+  return tonumber(port) or 2345
 end
 
 ---@type LazySpec
@@ -63,19 +37,20 @@ return {
     },
     {
       '<leader>da',
-      function() attach_remote() end,
-      ft = 'go',
-      desc = 'DAP: Attach to external Delve (headless)',
-    },
-    {
-      '<leader>dA',
       function()
-        local default = tostring(attach_port())
-        local port = tonumber(vim.fn.input('Delve port: ', default)) or tonumber(default)
-        attach_remote { port = port }
+        local port = tonumber(vim.fn.input('Delve port: ', tostring(default_attach_port())))
+        if not port then return end
+        require('dap').run({
+          type = 'go',
+          name = 'Attach remote (Delve headless)',
+          request = 'attach',
+          mode = 'remote',
+          host = '127.0.0.1',
+          port = port,
+        }, { new = true })
       end,
       ft = 'go',
-      desc = 'DAP: Attach to external Delve (pick port)',
+      desc = 'DAP: Attach to external Delve (headless)',
     },
     {
       '<leader>dt',
@@ -93,17 +68,14 @@ return {
       '<leader>dF',
       function()
         local go_dev = require 'config.go'
-        require('dap').run(
-          {
-            type = 'go',
-            name = 'Debug file',
-            request = 'launch',
-            program = vim.fn.expand '%:p',
-            cwd = go_dev.mod_root(),
-            buildFlags = go_dev.gopls_build_flags,
-          },
-          { new = true }
-        )
+        require('dap').run({
+          type = 'go',
+          name = 'Debug file',
+          request = 'launch',
+          program = vim.fn.expand '%:p',
+          cwd = go_dev.mod_root(),
+          buildFlags = go_dev.gopls_build_flags,
+        }, { new = true })
       end,
       ft = 'go',
       desc = 'DAP: Debug current Go file',
@@ -154,38 +126,14 @@ return {
       vim.fn.sign_define(tp, { text = icon, texthl = hl, numhl = hl })
     end
 
-    dap.listeners.after.event_initialized['dapui'] = function()
-      dapui.open { reset = true }
-    end
-    dap.listeners.before.event_terminated['dapui'] = function()
-      dapui.close()
-    end
-    dap.listeners.before.event_exited['dapui'] = function()
-      dapui.close()
-    end
+    dap.listeners.after.event_initialized['dapui'] = function() dapui.open { reset = true } end
+    dap.listeners.before.event_terminated['dapui'] = function() dapui.close() end
+    dap.listeners.before.event_exited['dapui'] = function() dapui.close() end
 
     require('dap-go').setup {
       delve = {
         path = dlv,
         build_flags = go_dev.gopls_build_flags,
-      },
-      dap_configurations = {
-        {
-          type = 'go',
-          name = 'Attach remote (Delve headless :2345)',
-          request = 'attach',
-          mode = 'remote',
-          host = '127.0.0.1',
-          port = 2345,
-        },
-        {
-          type = 'go',
-          name = 'Attach remote (env port)',
-          request = 'attach',
-          mode = 'remote',
-          host = '127.0.0.1',
-          port = attach_port,
-        },
       },
     }
   end,

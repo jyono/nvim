@@ -64,7 +64,7 @@ nvim cmd/main.go
 ```
 
 1. Set a breakpoint (e.g. in `runAPI()`)
-2. `<leader>da` — attach to Delve on `127.0.0.1:2345`
+2. `<leader>da` — prompts for the port (prefilled `2345`); press Enter to accept
 3. dap-ui opens; execution stops at breakpoints
 4. Inspect **Variables** — `DEMO_LOG_LEVEL`, `DEMO_PORT` come from the external process env
 
@@ -72,9 +72,8 @@ nvim cmd/main.go
 
 | Key | Action |
 |-----|--------|
-| `<leader>da` | Attach (default port 2345) |
-| `<leader>dA` | Attach (prompt for port) |
-| `<leader>dc` | Continue / pick config (includes attach entries) |
+| `<leader>da` | Attach to headless Delve (prompts for port, prefilled `2345`) |
+| `<leader>dc` | Continue / pick a dap-go launch config |
 | `<leader>db` | Toggle breakpoint |
 | `<leader>du` | Toggle dap-ui |
 | `<leader>dt` | Debug nearest Go test (launch mode, not attach) |
@@ -87,14 +86,16 @@ nvim cmd/main.go
 DLV_PORT=4444 make debug
 ```
 
-**Terminal 2 (before nvim, or use `<leader>dA`):**
+**Terminal 2:**
 
 ```bash
-export DAP_ATTACH_PORT=4444
+export DLV_PORT=4444   # prefills the <leader>da prompt
 nvim cmd/main.go
 ```
 
-Port resolution order in nvim: `DAP_ATTACH_PORT` → `DLV_PORT` → default `2345`.
+`DLV_PORT` is the same variable the Makefile uses, so exporting it once covers both
+terminals. Prompt prefill order in nvim: `DLV_PORT` → port from `DLV_LISTEN` → `2345`.
+You can always just type the port at the `<leader>da` prompt instead.
 
 ## Run without debugger
 
