@@ -14,21 +14,4 @@ require('lazy').setup({
 }, {
   -- Avoid :checkhealth lazy ERROR when hererocks/luarocks is not installed.
   rocks = { enabled = false },
-  ui = {
-    icons = vim.g.have_nerd_font and {} or {
-      cmd = '⌘',
-      config = '🛠',
-      event = '📅',
-      ft = '📂',
-      init = '⚙',
-      keys = '🗝',
-      plugin = '🔌',
-      runtime = '💻',
-      require = '🌙',
-      source = '📄',
-      start = '🚀',
-      task = '📌',
-      lazy = '💤 ',
-    },
-  },
 })

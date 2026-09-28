@@ -5,7 +5,6 @@ return {
     event = 'VimEnter',
     opts = {
       delay = 0,
-      icons = { mappings = vim.g.have_nerd_font },
       -- Drop `local` so buffer maps (gitsigns) interleave A–Z with global ones.
       sort = { 'group', 'alphanum', 'mod' },
       spec = {

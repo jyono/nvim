@@ -119,67 +119,12 @@ return {
           settings = {
             gopls = {
               buildFlags = go_dev.gopls_build_flags, -- monorepo tags; see config.go
-              completeUnimported = true,
               usePlaceholders = true,
-              deepCompletion = true,
-              matcher = 'Fuzzy',
-              hoverKind = 'FullDocumentation',
-              linkTarget = 'pkg.go.dev',
-              linksInHover = true,
-              expandWorkspaceToModule = true,
               staticcheck = true,
-              analyses = {
-                asmdecl = true,
-                assign = true,
-                atomic = true,
-                atomicalign = true,
-                bools = true,
-                buildtag = true,
-                cgocall = true,
-                composites = true,
-                copylock = true,
-                defers = true,
-                directive = true,
-                errorsas = true,
-                framepointer = true,
-                httpresponse = true,
-                ifaceassert = true,
-                loopclosure = true,
-                lostcancel = true,
-                nilfunc = true,
-                printf = true,
-                shift = true,
-                sigchanyzer = true,
-                slog = true,
-                stdmethods = true,
-                stringintconv = true,
-                structtag = true,
-                testinggoroutine = true,
-                tests = true,
-                timeformat = true,
-                unmarshal = true,
-                unreachable = true,
-                unsafeptr = true,
-                unusedresult = true,
-                deepequalerrors = true,
-                embed = true,
-                fillreturns = true,
-                infertypeargs = true,
-                nilness = true,
-                nonewvars = true,
-                noresultvalues = true,
-                shadow = true,
-                simplifycompositelit = true,
-                simplifyrange = true,
-                simplifyslice = true,
-                sortslice = true,
-                stubmethods = true,
-                undeclaredname = true,
-                unusedparams = true,
-                unusedvariable = true,
-                unusedwrite = true,
-                useany = true,
-              },
+              gofumpt = true,
+              directoryFilters = { '-vendor' },
+              -- Everything else in gopls' default analyzer set is already on.
+              analyses = { shadow = true },
               hints = {
                 assignVariableTypes = true,
                 compositeLiteralFields = true,
@@ -189,18 +134,6 @@ return {
                 parameterNames = true,
                 rangeVariableTypes = true,
               },
-              codelenses = {
-                gc_details = true,
-                generate = true,
-                regenerate_cgo = true,
-                test = true,
-                tidy = true,
-                upgrade_dependency = true,
-                vendor = true,
-                vulncheck = true,
-              },
-              gofumpt = true,
-              directoryFilters = { '-vendor' },
             },
           },
           on_attach = function(client, bufnr)
@@ -220,20 +153,6 @@ return {
         pyright = {},
         rust_analyzer = {},
         ts_ls = {
-          settings = {},
-          root_dir = function(bufnr, on_dir)
-            local root_markers = flatten_root_markers {
-              { 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', 'bun.lock' },
-              { '.git' },
-            }
-            -- Prefer deno.json roots; skip when deno.lock is nested under a node project.
-            local deno_root = vim.fs.root(bufnr, { 'deno.json', 'deno.jsonc' })
-            local deno_lock_root = vim.fs.root(bufnr, { 'deno.lock' })
-            local project_root = vim.fs.root(bufnr, root_markers)
-            if deno_lock_root and (not project_root or #deno_lock_root > #project_root) then return end
-            if deno_root and (not project_root or #deno_root >= #project_root) then return end
-            on_dir(project_root or vim.fn.getcwd())
-          end,
           on_attach = function(client, bufnr)
             -- Prettier via conform (`<leader>f`), not ts_ls.
             client.server_capabilities.documentFormattingProvider = false
