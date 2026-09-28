@@ -289,7 +289,7 @@ return {
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
       require('mason-lspconfig').setup {
         ensure_installed = {}, -- servers come from the explicit `servers` table only
-        automatic_installation = false,
+        automatic_enable = false,
       }
 
       require 'lspconfig'
