@@ -42,18 +42,12 @@ return {
   {
     'mistweaverco/kulala.nvim',
     ft = { 'http', 'rest' },
-    -- Lazy keys: load plugin from any buffer + show in which-key before opening .http.
-    -- Kulala's global_keymaps (below) registers the full default set on load.
+    -- `ft` loads kulala in .http buffers, where its own global_keymaps bind the full
+    -- set under <leader>k. These are only the entry points needed from other buffers.
     keys = {
-      { '<leader>ks', function() require('kulala').run() end, desc = 'Send request', mode = { 'n', 'v' } },
-      { '<leader>ka', function() require('kulala').run_all() end, desc = 'Send all requests', mode = { 'n', 'v' } },
       { '<leader>kb', function() require('kulala').scratchpad() end, desc = 'Open scratchpad' },
       { '<leader>ko', function() require('kulala').open() end, desc = 'Open kulala' },
       { '<leader>kr', function() require('kulala').replay() end, desc = 'Replay last request' },
-      { '<leader>kc', function() require('kulala').copy() end, desc = 'Copy as cURL' },
-      { '<leader>kC', paste_from_curl, desc = 'Paste from curl' },
-      { '<leader>ki', function() require('kulala').inspect() end, desc = 'Inspect request' },
-      { '<leader>ke', function() require('kulala').set_selected_env() end, desc = 'Select environment' },
       { '<leader>kE', function() require('kulala').export() end, desc = 'Export collection' },
     },
     opts = {
