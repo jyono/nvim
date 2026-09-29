@@ -81,6 +81,13 @@ return {
             -- `<leader>tf` is floating terminal in config.keymaps.
             map('<leader>ti', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle [I]nlay hints')
           end
+
+          -- Lenses are computed by the server but not drawn until enabled; Nvim then
+          -- re-requests them itself (debounced, via nvim_buf_attach) on every change.
+          if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_codeLens, event.buf) then
+            map('grl', vim.lsp.codelens.run, 'Run code [L]ens')
+            vim.lsp.codelens.enable(true, { bufnr = event.buf })
+          end
         end,
       })
 
@@ -125,6 +132,8 @@ return {
               directoryFilters = { '-vendor' },
               -- Everything else in gopls' default analyzer set is already on.
               analyses = { shadow = true },
+              -- Only non-default lens worth having; `generate`/`tidy`/`govulncheck` are on already.
+              codelenses = { test = true },
               hints = {
                 assignVariableTypes = true,
                 compositeLiteralFields = true,
@@ -196,11 +205,7 @@ return {
         'sql-formatter',
         'prettier',
         'ruff',
-        'staticcheck',
-        'goimports',
-        'gofumpt',
-        'gomodifytags',
-        'impl',
+        -- gopls vendors gofumpt/staticcheck and organizes imports itself; no standalone binaries.
         'golangci-lint',
         'delve',
       })
