@@ -1,7 +1,9 @@
 local M = {}
 
 -- gopls build tags for this monorepo (editing/analysis only; dap-go uses stock build).
-M.tags = 'functional,integration,small,medium,large'
+-- `wireinject` is deliberately absent: enabling it would analyze the wire.go injectors
+-- and exclude the generated wire_gen.go (//go:build !wireinject) that actually compiles.
+M.tags = 'unit,integration,functional,medium,large,benchmark'
 M.gopls_build_flags = { '-tags', M.tags }
 
 function M.mod_root(start_dir)

@@ -31,6 +31,7 @@ return {
         'tsx',
         'json',
         'toml',
+        'graphql',
         'css',
         'helm',
         'dockerfile',
