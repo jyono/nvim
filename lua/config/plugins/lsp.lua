@@ -159,6 +159,14 @@ return {
             end
           end,
         },
+        graphql = {
+          -- Upstream calls on_dir(nil) when no GraphQL config is found, which starts the
+          -- server rootless for every ts/tsx buffer. Only attach where a config exists.
+          root_dir = function(bufnr, on_dir)
+            local root = vim.fs.root(bufnr, function(name) return name:match '^%.graphqlrc' ~= nil or name:match '^%.?graphql%.config%.' ~= nil end)
+            if root then on_dir(root) end
+          end,
+        },
         pyright = {},
         rust_analyzer = {},
         ts_ls = {
