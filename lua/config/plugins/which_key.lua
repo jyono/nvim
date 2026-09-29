@@ -13,7 +13,6 @@ return {
         { '<leader>k', group = '[k]ulala' },
         { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
         { '<leader>t', group = '[T]oggle' },
-        { '<leader>ti', desc = 'LSP inlay hints', mode = { 'n' } },
         { 'gr', group = 'LSP Actions', mode = { 'n' } },
       },
     },
