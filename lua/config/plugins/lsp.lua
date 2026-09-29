@@ -188,22 +188,12 @@ return {
               if root ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(root .. '/.luarc.json') or vim.uv.fs_stat(root .. '/.luarc.jsonc')) then return end
             end
 
-            -- nvim_get_runtime_file includes the config dir itself. Left in, lua_ls scans
-            -- the workspace a second time as a library and reports "Loading workspace" twice.
-            local library = { '${3rd}/luv/library', '${3rd}/busted/library' }
-            for _, dir in ipairs(vim.api.nvim_get_runtime_file('', true)) do
-              if not root or vim.fs.normalize(dir) ~= vim.fs.normalize(root) then library[#library + 1] = dir end
-            end
-
             client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
               runtime = {
                 version = 'LuaJIT',
                 path = { 'lua/?.lua', 'lua/?/init.lua' },
               },
-              workspace = {
-                checkThirdParty = false,
-                library = library,
-              },
+              workspace = { checkThirdParty = false },
             })
           end,
           settings = {
