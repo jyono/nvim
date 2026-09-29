@@ -159,14 +159,15 @@ return {
             end
           end,
         },
-        graphql = {
-          -- Upstream calls on_dir(nil) when no GraphQL config is found, which starts the
-          -- server rootless for every ts/tsx buffer. Only attach where a config exists.
-          root_dir = function(bufnr, on_dir)
-            local root = vim.fs.root(bufnr, function(name) return name:match '^%.graphqlrc' ~= nil or name:match '^%.?graphql%.config%.' ~= nil end)
-            if root then on_dir(root) end
-          end,
-        },
+        -- Disabled. Kept for reference: graphql-lsp works in js/apps/horus and js/apps/ui,
+        -- but upstream calls on_dir(nil) when no GraphQL config is found, which starts the
+        -- server rootless for every ts/tsx buffer. The root_dir below is the needed guard.
+        -- graphql = {
+        --   root_dir = function(bufnr, on_dir)
+        --     local root = vim.fs.root(bufnr, function(name) return name:match '^%.graphqlrc' ~= nil or name:match '^%.?graphql%.config%.' ~= nil end)
+        --     if root then on_dir(root) end
+        --   end,
+        -- },
         pyright = {},
         rust_analyzer = {},
         ts_ls = {
