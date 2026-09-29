@@ -79,7 +79,10 @@ return {
 
           if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
             vim.lsp.inlay_hint.enable(true, { bufnr = event.buf })
-            map('grh', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }, { bufnr = event.buf }) end, 'Toggle inlay [H]ints')
+            map('grh', function()
+              local opts = { bufnr = event.buf }
+              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled(opts), opts)
+            end, 'Toggle inlay [H]ints')
           end
 
           -- Lenses are computed by the server but not drawn until enabled; Nvim then
@@ -182,11 +185,9 @@ return {
           on_init = function(client)
             client.server_capabilities.documentFormattingProvider = false
 
+            -- Respect project .luarc; only patch the Neovim config workspace.
             local root = client.workspace_folders and client.workspace_folders[1].name
-            if root then
-              -- Respect project .luarc; only patch Neovim config workspace.
-              if root ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(root .. '/.luarc.json') or vim.uv.fs_stat(root .. '/.luarc.jsonc')) then return end
-            end
+            if root and root ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(root .. '/.luarc.json') or vim.uv.fs_stat(root .. '/.luarc.jsonc')) then return end
 
             client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
               runtime = {
