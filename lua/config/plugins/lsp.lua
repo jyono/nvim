@@ -78,8 +78,8 @@ return {
           end
 
           if client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, event.buf) then
-            -- `<leader>tf` is floating terminal in config.keymaps.
-            map('<leader>ti', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle [I]nlay hints')
+            vim.lsp.inlay_hint.enable(true, { bufnr = event.buf })
+            map('grh', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }, { bufnr = event.buf }) end, 'Toggle inlay [H]ints')
           end
 
           -- Lenses are computed by the server but not drawn until enabled; Nvim then
@@ -182,10 +182,17 @@ return {
           on_init = function(client)
             client.server_capabilities.documentFormattingProvider = false
 
-            if client.workspace_folders then
-              local path = client.workspace_folders[1].name
+            local root = client.workspace_folders and client.workspace_folders[1].name
+            if root then
               -- Respect project .luarc; only patch Neovim config workspace.
-              if path ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc')) then return end
+              if root ~= vim.fn.stdpath 'config' and (vim.uv.fs_stat(root .. '/.luarc.json') or vim.uv.fs_stat(root .. '/.luarc.jsonc')) then return end
+            end
+
+            -- nvim_get_runtime_file includes the config dir itself. Left in, lua_ls scans
+            -- the workspace a second time as a library and reports "Loading workspace" twice.
+            local library = { '${3rd}/luv/library', '${3rd}/busted/library' }
+            for _, dir in ipairs(vim.api.nvim_get_runtime_file('', true)) do
+              if not root or vim.fs.normalize(dir) ~= vim.fs.normalize(root) then library[#library + 1] = dir end
             end
 
             client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
@@ -195,10 +202,7 @@ return {
               },
               workspace = {
                 checkThirdParty = false,
-                library = vim.tbl_extend('force', vim.api.nvim_get_runtime_file('', true), {
-                  '${3rd}/luv/library',
-                  '${3rd}/busted/library',
-                }),
+                library = library,
               },
             })
           end,
