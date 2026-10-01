@@ -32,6 +32,9 @@ return {
         ui_select = true,
         -- Only `file:` uses fzf field syntax; `image:foo` etc. should search literally.
         matcher = { file_pos = true },
+        -- Unbounded finds (hidden+ignored in $HOME) re-sort the list for ~20s, so <CR> opens
+        -- whatever landed on the cursor index instead of the rendered line.
+        limit = 100000,
         sources = {
           explorer = {
             watch = true,
@@ -95,18 +98,7 @@ return {
         function() picker.files { cwd = vim.fn.stdpath 'config', title = 'Neovim config files' } end,
         { desc = '[S]earch [N]eovim files' }
       )
-      vim.keymap.set(
-        'n',
-        '<leader>sag',
-        function() picker.grep { title = 'Live Grep (All Files)', hidden = true, ignored = true, exclude = { '.git/' } } end,
-        { desc = '[S]earch [A]ll Files [G]rep' }
-      )
-      vim.keymap.set(
-        'n',
-        '<leader>saf',
-        function() picker.files { title = 'Find All Files (Hidden + Ignored)', hidden = true, ignored = true, exclude = { '.git/' } } end,
-        { desc = '[S]earch [A]ll [F]iles' }
-      )
+      -- Hidden/ignored files: <a-h>/<a-i> inside any picker; `.git` is excluded by default.
       -- Git: status/stage/diff/log/commit all live in lazygit; signs and hunk nav in gitsigns.
       vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git lazy[g]it' })
       vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Git [o]pen in browser' })
