@@ -32,9 +32,20 @@ return {
         ui_select = true,
         -- Only `file:` uses fzf field syntax; `image:foo` etc. should search literally.
         matcher = { file_pos = true },
-        -- Unbounded finds (hidden+ignored in $HOME) re-sort the list for ~20s, so <CR> opens
-        -- whatever landed on the cursor index instead of the rendered line.
-        limit = 100000,
+        actions = {
+          -- While results stream (e.g. after <a-h>/<a-i>), list.cursor/top re-sort ahead of the
+          -- redraw. `visible` is written with the buffer lines, so index it by the window row.
+          -- jump re-reads picker:selected() after a scheduled stopinsert, so pin it on the instance.
+          confirm = function(picker, item, action)
+            local list = picker.list
+            local row = vim.api.nvim_win_get_cursor(list.win.win)[1]
+            local shown = list.visible[list.reverse and (list.state.height - row + 1) or row]
+            if shown and #picker:selected() == 0 then
+              picker.selected = function() return { shown } end
+            end
+            return require('snacks.picker.actions').jump(picker, item, action)
+          end,
+        },
         sources = {
           explorer = {
             watch = true,
