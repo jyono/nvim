@@ -32,20 +32,6 @@ return {
         ui_select = true,
         -- Only `file:` uses fzf field syntax; `image:foo` etc. should search literally.
         matcher = { file_pos = true },
-        actions = {
-          -- While results stream (e.g. after <a-h>/<a-i>), list.cursor/top re-sort ahead of the
-          -- redraw. `visible` is written with the buffer lines, so index it by the window row.
-          -- jump re-reads picker:selected() after a scheduled stopinsert, so pin it on the instance.
-          confirm = function(picker, item, action)
-            local list = picker.list
-            local row = vim.api.nvim_win_get_cursor(list.win.win)[1]
-            local shown = list.visible[list.reverse and (list.state.height - row + 1) or row]
-            if shown and #picker:selected() == 0 then
-              picker.selected = function() return { shown } end
-            end
-            return require('snacks.picker.actions').jump(picker, item, action)
-          end,
-        },
         sources = {
           explorer = {
             watch = true,
@@ -109,7 +95,18 @@ return {
         function() picker.files { cwd = vim.fn.stdpath 'config', title = 'Neovim config files' } end,
         { desc = '[S]earch [N]eovim files' }
       )
-      -- Hidden/ignored files: <a-h>/<a-i> inside any picker; `.git` is excluded by default.
+      vim.keymap.set(
+        'n',
+        '<leader>sag',
+        function() picker.grep { title = 'Live Grep (All Files)', hidden = true, ignored = true, exclude = { '.git/' } } end,
+        { desc = '[S]earch [A]ll Files [G]rep' }
+      )
+      vim.keymap.set(
+        'n',
+        '<leader>saf',
+        function() picker.files { title = 'Find All Files (Hidden + Ignored)', hidden = true, ignored = true, exclude = { '.git/' } } end,
+        { desc = '[S]earch [A]ll [F]iles' }
+      )
       -- Git: status/stage/diff/log/commit all live in lazygit; signs and hunk nav in gitsigns.
       vim.keymap.set('n', '<leader>gg', function() Snacks.lazygit() end, { desc = 'Git lazy[g]it' })
       vim.keymap.set({ 'n', 'v' }, '<leader>go', function() Snacks.gitbrowse() end, { desc = 'Git [o]pen in browser' })
