@@ -43,6 +43,11 @@ return {
         desc = 'Git file [H]istory (Diffview)',
       },
       {
+        '<leader>gD',
+        '<cmd>DiffviewFileHistory %:h<cr>',
+        desc = 'Git [D]irectory history (Diffview)',
+      },
+      {
         '<leader>gq',
         '<cmd>DiffviewClose<cr>',
         desc = 'Git diffview [q]uit',
