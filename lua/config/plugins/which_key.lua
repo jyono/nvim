@@ -8,6 +8,7 @@ return {
       -- Drop `local` so buffer maps (gitsigns) interleave A–Z with global ones.
       sort = { 'group', 'alphanum', 'mod' },
       spec = {
+        { '<leader>b', group = '[B] database' },
         { '<leader>d', group = 'DAP / [D]ebug', mode = { 'n' } },
         { '<leader>g', group = 'Git', mode = { 'n', 'v' } },
         { '<leader>k', group = '[k]ulala' },

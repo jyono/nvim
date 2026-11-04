@@ -1,0 +1,22 @@
+---
+description: Keep this public Neovim config free of employer, product, and environment-specific names
+alwaysApply: true
+---
+
+# No internal names in this config
+
+This repo is a public Neovim config. Nothing in it may identify an employer, product, customer, cluster, or real environment.
+
+## Do not add
+
+- Product or company names
+- Cluster names, kube contexts, namespaces, secret names, service names, hostnames
+- Real connection URLs, usernames, passwords, tokens, or ports tied to a real deploy
+- Comments or docs that point at a private repo path
+
+## Do
+
+- Generic tools and mechanisms: `kubectl`, port-forward, `localhost`, secret key prompts, `psql`
+- Examples use placeholders: `NAMESPACE`, `SECRET`, `127.0.0.1`
+
+Editor behavior may assume a large Go monorepo (build tags, lint cost). Do not name that repo. If a request is motivated by a private checkout, implement only the generic version here.
