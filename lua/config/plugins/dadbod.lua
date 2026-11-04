@@ -8,12 +8,11 @@ return {
       { 'tpope/vim-dadbod', lazy = true },
       { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true },
     },
-    cmd = { 'DBUI', 'DBUIToggle', 'DBUIAddConnection', 'DBUIFindBuffer', 'DBKube' },
+    cmd = { 'DBUI', 'DBUIToggle', 'DBUIAddConnection', 'DBUIFindBuffer' },
     keys = {
       { '<leader>bb', '<cmd>DBUIToggle<cr>', desc = 'DBUI toggle' },
       { '<leader>bf', '<cmd>DBUIFindBuffer<cr>', desc = 'DBUI find buffer' },
-      { '<leader>ba', '<cmd>DBUIAddConnection<cr>', desc = 'DBUI add connection (URL saved to disk)' },
-      { '<leader>bk', function() require('config.dadbod_kube').connect() end, desc = 'Postgres via kubectl secret' },
+      { '<leader>ba', '<cmd>DBUIAddConnection<cr>', desc = 'DBUI add connection' },
     },
     init = function()
       vim.g.db_ui_use_nerd_fonts = 1
@@ -28,12 +27,6 @@ return {
       vim.g.db_ui_disable_mappings_dbout = 1
     end,
     config = function()
-      vim.api.nvim_create_user_command(
-        'DBKube',
-        function() require('config.dadbod_kube').connect() end,
-        { desc = 'Postgres via kubectl secret (port-forward)' }
-      )
-
       local function map(buf, mode, lhs, rhs, desc) vim.keymap.set(mode, lhs, rhs, { buffer = buf, silent = true, desc = desc }) end
 
       vim.api.nvim_create_autocmd('FileType', {

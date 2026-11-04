@@ -16,7 +16,7 @@ This repo is a public Neovim config. Nothing in it may identify an employer, pro
 
 ## Do
 
-- Generic tools and mechanisms: `kubectl`, port-forward, `localhost`, secret key prompts, `psql`
+- Generic tools and mechanisms: `kubectl`, port-forward, `localhost`, `psql`
 - Examples use placeholders: `NAMESPACE`, `SECRET`, `127.0.0.1`
 
 Editor behavior may assume a large Go monorepo (build tags, lint cost). Do not name that repo. If a request is motivated by a private checkout, implement only the generic version here.
