@@ -1,3 +1,13 @@
+-- nvim-treesitter (main) shells out to `tree-sitter`; cargo install puts it in
+-- ~/.cargo/bin, which GUI/desktop launches and stripped PATHs often omit.
+do
+  local cargo_bin = vim.fs.joinpath(vim.env.HOME, '.cargo', 'bin')
+  local path = vim.env.PATH or ''
+  if vim.uv.fs_stat(cargo_bin) and not path:find(cargo_bin, 1, true) then
+    vim.env.PATH = cargo_bin .. ':' .. path
+  end
+end
+
 -- Silence :checkhealth vim.provider when not using :python/:perl/Node plugins.
 vim.g.loaded_node_provider = 0
 vim.g.loaded_perl_provider = 0
